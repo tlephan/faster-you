@@ -51,11 +51,13 @@ npm run dev
 
 This starts Vite on port 3000 and launches the Neutralino window pointing at it. Hot-reload works for all React changes.
 
-You can also develop as a plain web app:
+You can also develop as a plain web app (shared SQLite via local API server):
 
 ```bash
-npm run dev:web   # Vite dev server only (no native window)
+npm run dev:web   # starts API server (port 3001) + Vite (port 3000)
 ```
+
+All browsers share the same SQLite database at `~/.fasteryou/fasteryou.db`. Server logs are written to `.log/server.log`.
 
 ### Production Build
 
@@ -79,12 +81,43 @@ Output binaries are in `dist/`:
 npx neu run
 ```
 
+## Scripts
+
+Helper scripts for launching and stopping the web app are in `scripts/`:
+
+| Script | Platform | Description |
+| --- | --- | --- |
+| `fasteryou-start.sh` | macOS / Linux | Start server + Vite and open browser |
+| `fasteryou-start.bat` | Windows | Start server + Vite and open browser |
+| `fasteryou-shutdown.sh` | macOS / Linux | Kill API server and Vite processes |
+| `fasteryou-shutdown.bat` | Windows | Kill API server and Vite processes |
+
+### macOS keyboard shortcut
+
+1. Open **Shortcuts.app** → create a new shortcut
+2. Add a **Run Shell Script** action pointing to `scripts/fasteryou-start.sh` (Shell: `/bin/bash`)
+3. Click the shortcut name → **Add Keyboard Shortcut** → press your key combo (e.g. `⌘⌥F`)
+4. Repeat for `fasteryou-shutdown.sh` with a different key (e.g. `⌘⌥K`)
+
+### Windows keyboard shortcut
+
+1. Install [AutoHotkey](https://www.autohotkey.com/)
+2. Create an `.ahk` file:
+
+   ```ahk
+   ^!f::Run "C:\path\to\faster-you\scripts\fasteryou-start.bat"
+   ^!k::Run "C:\path\to\faster-you\scripts\fasteryou-shutdown.bat"
+   ```
+
+3. Double-click the `.ahk` file to activate, or place in `shell:startup` to auto-load on login
+
 ## Data Storage
 
 The SQLite database is persisted via:
 
 - **NeutralinoJS mode** — `Neutralino.filesystem` writes to `<user-data>/fasteryou/fasteryou.db`
-- **Web/dev mode** — Falls back to `localStorage` (base64-encoded)
+- **Web mode (with server)** — `~/.fasteryou/fasteryou.db` via `better-sqlite3` (shared across all browsers)
+- **Web mode (no server)** — Falls back to IndexedDB in the browser
 
 ## License
 
