@@ -1,5 +1,29 @@
 import { v4 as uuidv4 } from 'uuid';
 import { queryAll, queryOne, execute, getChanges, transaction, forceSave } from './db';
+
+// ── Server mode (web only) ────────────────────────────────────
+const SERVER_URL = 'http://127.0.0.1:3001';
+let serverMode = false;
+
+export async function detectServer(): Promise<boolean> {
+  try {
+    const res = await fetch(`${SERVER_URL}/ping`, { signal: AbortSignal.timeout(600) });
+    serverMode = res.ok;
+  } catch {
+    serverMode = false;
+  }
+  return serverMode;
+}
+
+async function sf(path: string, init: RequestInit = {}): Promise<any> {
+  const res = await fetch(`${SERVER_URL}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...init,
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 import type {
   Task,
   TaskLink,
@@ -431,29 +455,101 @@ async function importData(): Promise<{ success: boolean; taskCount?: number }> {
 
 const api = {
   tasks: {
-    getAll: async (board?: string) => getTasks(board),
-    get: async (id: string) => getTask(id)!,
-    create: async (task: CreateTaskInput) => createTask(task),
-    update: async (id: string, updates: UpdateTaskInput) => updateTask(id, updates)!,
-    delete: async (id: string) => deleteTask(id),
-    toggle: async (id: string) => toggleTask(id),
-    move: async (id: string, board: string) => moveTask(id, board),
-    reorder: async (id: string, newPosition: number) => reorderTask(id, newPosition),
-    search: async (query: string) => searchTasks(query),
-    deleteOlderThan: async (days: number) => deleteOlderThan(days),
+    getAll: async (board?: string) => {
+      if (serverMode) return (await sf('/tasks' + (board ? `?board=${encodeURIComponent(board)}` : ''))).tasks;
+      return getTasks(board);
+    },
+    get: async (id: string) => {
+      if (serverMode) return sf(`/tasks/${id}`);
+      return getTask(id)!;
+    },
+    create: async (task: CreateTaskInput) => {
+      if (serverMode) return sf('/tasks', { method: 'POST', body: JSON.stringify(task) });
+      return createTask(task);
+    },
+    update: async (id: string, updates: UpdateTaskInput) => {
+      if (serverMode) return sf(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(updates) });
+      return updateTask(id, updates)!;
+    },
+    delete: async (id: string) => {
+      if (serverMode) return sf(`/tasks/${id}`, { method: 'DELETE' });
+      return deleteTask(id);
+    },
+    toggle: async (id: string) => {
+      if (serverMode) return sf(`/tasks/${id}/toggle`, { method: 'POST' });
+      return toggleTask(id);
+    },
+    move: async (id: string, board: string) => {
+      if (serverMode) return sf(`/tasks/${id}/move`, { method: 'POST', body: JSON.stringify({ board }) });
+      return moveTask(id, board);
+    },
+    reorder: async (id: string, newPosition: number) => {
+      if (serverMode) return sf(`/tasks/${id}/reorder`, { method: 'POST', body: JSON.stringify({ position: newPosition }) });
+      return reorderTask(id, newPosition);
+    },
+    search: async (query: string) => {
+      if (serverMode) return (await sf(`/tasks/search?q=${encodeURIComponent(query)}`)).tasks;
+      return searchTasks(query);
+    },
+    deleteOlderThan: async (days: number) => {
+      if (serverMode) return sf('/tasks/older-than', { method: 'DELETE', body: JSON.stringify({ days }) });
+      return deleteOlderThan(days);
+    },
   },
   taskLinks: {
-    get: async (taskId: string) => getTaskLinks(taskId),
-    create: async (link: CreateTaskLinkInput) => createTaskLink(link),
-    delete: async (id: string) => deleteTaskLink(id),
+    get: async (taskId: string) => {
+      if (serverMode) return (await sf(`/task-links/${taskId}`)).links;
+      return getTaskLinks(taskId);
+    },
+    create: async (link: CreateTaskLinkInput) => {
+      if (serverMode) return sf('/task-links', { method: 'POST', body: JSON.stringify(link) });
+      return createTaskLink(link);
+    },
+    delete: async (id: string) => {
+      if (serverMode) return sf(`/task-links/${id}`, { method: 'DELETE' });
+      return deleteTaskLink(id);
+    },
   },
   app: {
     getInfo: () => getAppInfo(),
     openExternal: (url: string) => openExternal(url),
   },
   data: {
-    export: () => exportData(),
-    import: () => importData(),
+    export: async () => {
+      if (serverMode) {
+        const payload = await sf('/export');
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fasteryou-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        return { success: true };
+      }
+      return exportData();
+    },
+    import: async () => {
+      if (serverMode) {
+        const jsonStr = await new Promise<string>((resolve, reject) => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.json';
+          input.onchange = () => {
+            const file = input.files?.[0];
+            if (!file) return reject(new Error('No file selected'));
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsText(file);
+          };
+          input.click();
+        });
+        const data = JSON.parse(jsonStr);
+        return sf('/import', { method: 'POST', body: JSON.stringify(data) });
+      }
+      return importData();
+    },
   },
 };
 

@@ -37,3 +37,6 @@ npm-debug.log*
 
 # Claude
 .claude/settings.json
+
+# FasterYou
+.fasteryou/

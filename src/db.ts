@@ -99,6 +99,42 @@ const MIGRATIONS = [
   },
 ];
 
+const IDB_DB_NAME = 'fasteryou';
+const IDB_STORE_NAME = 'db';
+const IDB_KEY = 'main';
+
+function openIdb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE_NAME);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function loadDbFromIndexedDB(): Promise<Uint8Array | null> {
+  const idb = await openIdb();
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(IDB_STORE_NAME, 'readonly');
+    const req = tx.objectStore(IDB_STORE_NAME).get(IDB_KEY);
+    req.onsuccess = () => {
+      idb.close();
+      resolve(req.result ? new Uint8Array(req.result) : null);
+    };
+    req.onerror = () => { idb.close(); reject(req.error); };
+  });
+}
+
+async function saveDbToIndexedDB(data: Uint8Array): Promise<void> {
+  const idb = await openIdb();
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(IDB_STORE_NAME, 'readwrite');
+    const req = tx.objectStore(IDB_STORE_NAME).put(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength), IDB_KEY);
+    req.onsuccess = () => { idb.close(); resolve(); };
+    req.onerror = () => { idb.close(); reject(req.error); };
+  });
+}
+
 async function loadDbFromDisk(): Promise<Uint8Array | null> {
   if (!isNeutralinoAvailable()) return null;
 
@@ -131,14 +167,9 @@ async function saveDbToDisk(): Promise<void> {
       await Neutralino.filesystem.writeBinaryFile(dbPath, buffer);
       console.debug(`[DB] Saved ${uint8Array.byteLength} bytes to ${dbPath}`);
     } else {
-      // Web mode: save to localStorage
-      let binary = '';
-      const chunkSize = 8192;
-      for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        binary += String.fromCharCode(...uint8Array.subarray(i, i + chunkSize));
-      }
-      localStorage.setItem('fasteryou_db', btoa(binary));
-      console.debug(`[DB] Saved ${uint8Array.byteLength} bytes to localStorage`);
+      // Web mode: save to IndexedDB
+      await saveDbToIndexedDB(uint8Array);
+      console.debug(`[DB] Saved ${uint8Array.byteLength} bytes to IndexedDB`);
     }
   } catch (err) {
     console.error('[DB] Save failed:', err);
@@ -173,7 +204,7 @@ export async function initDatabase(): Promise<void> {
     }
   } else {
     dbPath = getFallbackPath();
-    console.log('[DB] Web mode, using localStorage');
+    console.log('[DB] Web mode, using IndexedDB');
   }
 
   // Try to load existing database
@@ -187,15 +218,10 @@ export async function initDatabase(): Promise<void> {
       console.log('[DB] No existing database file found, starting fresh');
     }
   } else {
-    // Web mode: load from localStorage
-    const stored = localStorage.getItem('fasteryou_db');
-    if (stored) {
-      const binary = atob(stored);
-      existingData = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        existingData[i] = binary.charCodeAt(i);
-      }
-      console.log(`[DB] Loaded database from localStorage (${existingData.byteLength} bytes)`);
+    // Web mode: load from IndexedDB
+    existingData = await loadDbFromIndexedDB();
+    if (existingData) {
+      console.log(`[DB] Loaded database from IndexedDB (${existingData.byteLength} bytes)`);
     }
   }
 

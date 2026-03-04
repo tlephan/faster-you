@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { initDatabase } from './db';
+import { detectServer } from './api';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -19,8 +20,12 @@ async function bootstrap() {
     await (window as any).Neutralino.init();
   }
 
-  // Initialize the sql.js database
-  await initDatabase();
+  // In web mode, prefer the local server (shared SQLite); fall back to sql.js + IndexedDB
+  const isNeutralino = typeof (window as any).Neutralino !== 'undefined';
+  const usingServer = !isNeutralino && await detectServer();
+  if (!usingServer) {
+    await initDatabase();
+  }
 
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
