@@ -23,7 +23,7 @@ async function getNeutralinoDataPath(): Promise<string> {
   // Try user's AppData/data directory first
   try {
     const homePath = await Neutralino.os.getPath('data');
-    const appDir = `${homePath}/fastnfocus`;
+    const appDir = `${homePath}/fasteryou`;
 
     // Ensure directory exists
     try {
@@ -37,8 +37,8 @@ async function getNeutralinoDataPath(): Promise<string> {
     await Neutralino.filesystem.writeFile(testPath, 'ok');
     await Neutralino.filesystem.remove(testPath);
 
-    console.log(`[DB] Using data path: ${appDir}/fastnfocus.db`);
-    return `${appDir}/fastnfocus.db`;
+    console.log(`[DB] Using data path: ${appDir}/fasteryou.db`);
+    return `${appDir}/fasteryou.db`;
   } catch (err) {
     console.warn('[DB] Failed to use AppData path, falling back to NL_PATH:', err);
   }
@@ -46,15 +46,15 @@ async function getNeutralinoDataPath(): Promise<string> {
   // Fallback: use the directory where the binary is located
   const nlPath = (window as any).NL_PATH;
   if (nlPath) {
-    const fallbackDir = `${nlPath}/.fastnfocus-data`;
+    const fallbackDir = `${nlPath}/.fasteryou-data`;
     try {
       try {
         await Neutralino.filesystem.getStats(fallbackDir);
       } catch {
         await Neutralino.filesystem.createDirectory(fallbackDir);
       }
-      console.log(`[DB] Using fallback path: ${fallbackDir}/fastnfocus.db`);
-      return `${fallbackDir}/fastnfocus.db`;
+      console.log(`[DB] Using fallback path: ${fallbackDir}/fasteryou.db`);
+      return `${fallbackDir}/fasteryou.db`;
     } catch (err) {
       console.error('[DB] Failed to create fallback directory:', err);
     }
@@ -64,7 +64,7 @@ async function getNeutralinoDataPath(): Promise<string> {
 }
 
 function getFallbackPath(): string {
-  return 'fastnfocus.db';
+  return 'fasteryou.db';
 }
 
 const MIGRATIONS = [
@@ -137,7 +137,7 @@ async function saveDbToDisk(): Promise<void> {
       for (let i = 0; i < uint8Array.length; i += chunkSize) {
         binary += String.fromCharCode(...uint8Array.subarray(i, i + chunkSize));
       }
-      localStorage.setItem('fastnfocus_db', btoa(binary));
+      localStorage.setItem('fasteryou_db', btoa(binary));
       console.debug(`[DB] Saved ${uint8Array.byteLength} bytes to localStorage`);
     }
   } catch (err) {
@@ -188,7 +188,7 @@ export async function initDatabase(): Promise<void> {
     }
   } else {
     // Web mode: load from localStorage
-    const stored = localStorage.getItem('fastnfocus_db');
+    const stored = localStorage.getItem('fasteryou_db');
     if (stored) {
       const binary = atob(stored);
       existingData = new Uint8Array(binary.length);

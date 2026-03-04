@@ -249,7 +249,7 @@ async function getAppInfo(): Promise<AppInfo> {
     const config = await Neutralino.app.getConfig();
     return {
       version: config.version || '1.0.1',
-      name: 'Fast & Focus',
+      name: 'Faster You',
       platform: navigator.platform,
       electronVersion: 'N/A (NeutralinoJS)',
       nodeVersion: 'N/A (WebAssembly)',
@@ -257,7 +257,7 @@ async function getAppInfo(): Promise<AppInfo> {
   }
   return {
     version: '1.0.1',
-    name: 'Fast & Focus',
+    name: 'Faster You',
     platform: navigator.platform,
     electronVersion: 'N/A (Web)',
     nodeVersion: 'N/A (Web)',
