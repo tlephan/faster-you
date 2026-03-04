@@ -6,6 +6,7 @@ dist/
 dist-neutralino/
 
 # NeutralinoJS
+bin/
 neutralinojs/
 neutralinojs.zip
 
