@@ -1,0 +1,454 @@
+import { v4 as uuidv4 } from 'uuid';
+import { queryAll, queryOne, execute, getChanges, transaction, forceSave } from './db';
+import type {
+  Task,
+  TaskLink,
+  CreateTaskInput,
+  UpdateTaskInput,
+  CreateTaskLinkInput,
+  AppInfo,
+} from './types';
+
+// Validation helpers
+const VALID_BOARDS = ['today', 'backlog'] as const;
+const VALID_PRIORITIES = ['high', 'medium', 'low'] as const;
+const VALID_LINK_TYPES = ['related', 'blocks', 'blocked_by'] as const;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_TITLE_LENGTH = 255;
+const MAX_DESCRIPTION_LENGTH = 5000;
+const MAX_SEARCH_LENGTH = 100;
+
+function assertUuid(value: unknown, name = 'id'): asserts value is string {
+  if (typeof value !== 'string' || !UUID_RE.test(value)) {
+    throw new Error(`Invalid ${name}`);
+  }
+}
+
+function assertBoard(value: unknown): asserts value is 'today' | 'backlog' {
+  if (!VALID_BOARDS.includes(value as any)) {
+    throw new Error(`Invalid board — must be one of: ${VALID_BOARDS.join(', ')}`);
+  }
+}
+
+function assertPriority(value: unknown): asserts value is 'high' | 'medium' | 'low' {
+  if (!VALID_PRIORITIES.includes(value as any)) {
+    throw new Error(`Invalid priority — must be one of: ${VALID_PRIORITIES.join(', ')}`);
+  }
+}
+
+function assertLinkType(value: unknown): asserts value is 'related' | 'blocks' | 'blocked_by' {
+  if (!VALID_LINK_TYPES.includes(value as any)) {
+    throw new Error(`Invalid link type — must be one of: ${VALID_LINK_TYPES.join(', ')}`);
+  }
+}
+
+function assertText(value: unknown, name: string, maxLen: number): asserts value is string {
+  if (typeof value !== 'string' || value.length === 0 || value.length > maxLen) {
+    throw new Error(`${name} must be a non-empty string with at most ${maxLen} characters`);
+  }
+}
+
+function isNeutralinoAvailable(): boolean {
+  return typeof window !== 'undefined' && typeof (window as any).Neutralino !== 'undefined';
+}
+
+// ─── Tasks ───────────────────────────────────────────────────
+
+function getTasks(board?: string): Task[] {
+  if (board !== undefined) {
+    assertBoard(board);
+    return queryAll<Task>('SELECT * FROM tasks WHERE board = ? ORDER BY done ASC, position ASC', [board]);
+  }
+  return queryAll<Task>('SELECT * FROM tasks ORDER BY board, done ASC, position ASC');
+}
+
+function getTask(id: string): Task | undefined {
+  assertUuid(id);
+  return queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+}
+
+function createTask(task: CreateTaskInput): Task {
+  assertText(task.title, 'title', MAX_TITLE_LENGTH);
+  assertBoard(task.board);
+  assertPriority(task.priority);
+  if (task.description !== undefined && task.description !== null) {
+    if (typeof task.description !== 'string' || task.description.length > MAX_DESCRIPTION_LENGTH) {
+      throw new Error(`description must be at most ${MAX_DESCRIPTION_LENGTH} characters`);
+    }
+  }
+
+  const id = uuidv4();
+  const maxPos = queryOne<{ 'MAX(position)': number | null }>(
+    'SELECT MAX(position) FROM tasks WHERE board = ?',
+    [task.board]
+  );
+  const position = ((maxPos?.['MAX(position)']) ?? 0) + 1;
+
+  execute(
+    `INSERT INTO tasks (id, title, description, board, priority, position)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, task.title, task.description || null, task.board, task.priority, position]
+  );
+
+  return queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id])!;
+}
+
+function updateTask(id: string, updates: UpdateTaskInput): Task | null {
+  assertUuid(id);
+  const allowed = ['title', 'description', 'priority', 'board', 'position'] as const;
+  const fields: string[] = [];
+  const values: unknown[] = [];
+
+  for (const key of allowed) {
+    if (!(key in updates) || updates[key as keyof UpdateTaskInput] === undefined) continue;
+    const val = updates[key as keyof UpdateTaskInput];
+
+    if (key === 'title') assertText(val, 'title', MAX_TITLE_LENGTH);
+    if (key === 'description') {
+      if (val !== null && val !== undefined) {
+        if (typeof val !== 'string' || val.length > MAX_DESCRIPTION_LENGTH) {
+          throw new Error(`description must be at most ${MAX_DESCRIPTION_LENGTH} characters`);
+        }
+      }
+    }
+    if (key === 'board') assertBoard(val);
+    if (key === 'priority') assertPriority(val);
+    if (key === 'position') {
+      if (typeof val !== 'number' || val < 0) {
+        throw new Error('position must be a non-negative number');
+      }
+    }
+
+    fields.push(`${key} = ?`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return null;
+
+  fields.push(`updated_at = datetime('now')`);
+  values.push(id);
+
+  execute(`UPDATE tasks SET ${fields.join(', ')} WHERE id = ?`, values);
+  return queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]) || null;
+}
+
+function deleteTask(id: string): { success: boolean } {
+  assertUuid(id);
+  execute('DELETE FROM tasks WHERE id = ?', [id]);
+  return { success: true };
+}
+
+function toggleTask(id: string): Task {
+  assertUuid(id);
+  execute(
+    `UPDATE tasks SET done = NOT done, updated_at = datetime('now') WHERE id = ?`,
+    [id]
+  );
+  return queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id])!;
+}
+
+function moveTask(id: string, board: string): Task {
+  assertUuid(id);
+  assertBoard(board);
+
+  const maxPos = queryOne<{ 'MAX(position)': number | null }>(
+    'SELECT MAX(position) FROM tasks WHERE board = ?',
+    [board]
+  );
+  const position = ((maxPos?.['MAX(position)']) ?? 0) + 1;
+
+  execute(
+    `UPDATE tasks SET board = ?, position = ?, updated_at = datetime('now') WHERE id = ?`,
+    [board, position, id]
+  );
+  return queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id])!;
+}
+
+function reorderTask(id: string, newPosition: number): Task {
+  assertUuid(id);
+  if (typeof newPosition !== 'number' || newPosition < 0) {
+    throw new Error('newPosition must be a non-negative number');
+  }
+  execute(
+    `UPDATE tasks SET position = ?, updated_at = datetime('now') WHERE id = ?`,
+    [newPosition, id]
+  );
+  return queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id])!;
+}
+
+function searchTasks(query: string): Task[] {
+  assertText(query, 'query', MAX_SEARCH_LENGTH);
+  const pattern = `%${query}%`;
+  return queryAll<Task>(
+    'SELECT * FROM tasks WHERE title LIKE ? ORDER BY board, position ASC',
+    [pattern]
+  );
+}
+
+function deleteOlderThan(days: number): { deleted: number } {
+  if (!Number.isInteger(days) || days <= 0 || days > 36500) {
+    throw new Error('days must be an integer between 1 and 36500');
+  }
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  execute('DELETE FROM tasks WHERE created_at < ?', [cutoff]);
+  const deleted = getChanges();
+  return { deleted };
+}
+
+// ─── Task Links ──────────────────────────────────────────────
+
+function getTaskLinks(taskId: string): TaskLink[] {
+  assertUuid(taskId, 'taskId');
+  return queryAll<TaskLink>(
+    `SELECT tl.*,
+            st.title as source_title,
+            tt.title as target_title
+     FROM task_links tl
+     JOIN tasks st ON st.id = tl.source_task_id
+     JOIN tasks tt ON tt.id = tl.target_task_id
+     WHERE tl.source_task_id = ? OR tl.target_task_id = ?`,
+    [taskId, taskId]
+  );
+}
+
+function createTaskLink(link: CreateTaskLinkInput): TaskLink {
+  assertUuid(link.sourceTaskId, 'sourceTaskId');
+  assertUuid(link.targetTaskId, 'targetTaskId');
+  assertLinkType(link.type);
+
+  if (link.sourceTaskId === link.targetTaskId) {
+    throw new Error('A task cannot link to itself');
+  }
+
+  const sourceExists = queryOne('SELECT 1 FROM tasks WHERE id = ?', [link.sourceTaskId]);
+  const targetExists = queryOne('SELECT 1 FROM tasks WHERE id = ?', [link.targetTaskId]);
+  if (!sourceExists || !targetExists) {
+    throw new Error('One or both tasks do not exist');
+  }
+
+  const id = uuidv4();
+  execute(
+    `INSERT INTO task_links (id, source_task_id, target_task_id, type) VALUES (?, ?, ?, ?)`,
+    [id, link.sourceTaskId, link.targetTaskId, link.type]
+  );
+
+  return queryOne<TaskLink>('SELECT * FROM task_links WHERE id = ?', [id])!;
+}
+
+function deleteTaskLink(id: string): { success: boolean } {
+  assertUuid(id);
+  execute('DELETE FROM task_links WHERE id = ?', [id]);
+  return { success: true };
+}
+
+// ─── App ─────────────────────────────────────────────────────
+
+async function getAppInfo(): Promise<AppInfo> {
+  if (isNeutralinoAvailable()) {
+    const Neutralino = (window as any).Neutralino;
+    const config = await Neutralino.app.getConfig();
+    return {
+      version: config.version || '1.0.1',
+      name: 'Fast & Focus',
+      platform: navigator.platform,
+      electronVersion: 'N/A (NeutralinoJS)',
+      nodeVersion: 'N/A (WebAssembly)',
+    };
+  }
+  return {
+    version: '1.0.1',
+    name: 'Fast & Focus',
+    platform: navigator.platform,
+    electronVersion: 'N/A (Web)',
+    nodeVersion: 'N/A (Web)',
+  };
+}
+
+async function openExternal(url: string): Promise<void> {
+  if (isNeutralinoAvailable()) {
+    const Neutralino = (window as any).Neutralino;
+    await Neutralino.os.open(url);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+// ─── Data Export/Import ──────────────────────────────────────
+
+interface ExportData {
+  version: number;
+  exportedAt: string;
+  tasks: Task[];
+  taskLinks: TaskLink[];
+}
+
+function isValidExport(data: unknown): data is ExportData {
+  if (typeof data !== 'object' || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return d.version === 1 && Array.isArray(d.tasks) && Array.isArray(d.taskLinks);
+}
+
+async function exportData(): Promise<{ success: boolean }> {
+  const tasks = queryAll<Task>('SELECT * FROM tasks');
+  const taskLinks = queryAll<TaskLink>('SELECT * FROM task_links');
+
+  const payload: ExportData = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    tasks,
+    taskLinks,
+  };
+
+  const jsonStr = JSON.stringify(payload, null, 2);
+
+  if (isNeutralinoAvailable()) {
+    const Neutralino = (window as any).Neutralino;
+    const defaultName = `fastnfocus-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+    const filePath = await Neutralino.os.showSaveDialog('Export Data', {
+      defaultPath: defaultName,
+      filters: [{ name: 'JSON files', extensions: ['json'] }],
+    });
+
+    if (!filePath) return { success: false };
+
+    await Neutralino.filesystem.writeFile(filePath, jsonStr);
+    return { success: true };
+  } else {
+    // Web fallback: download via blob
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fastnfocus-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    return { success: true };
+  }
+}
+
+async function importData(): Promise<{ success: boolean; taskCount?: number }> {
+  let jsonStr: string;
+
+  if (isNeutralinoAvailable()) {
+    const Neutralino = (window as any).Neutralino;
+    const entries = await Neutralino.os.showOpenDialog('Import Data', {
+      filters: [{ name: 'JSON files', extensions: ['json'] }],
+      multiSelections: false,
+    });
+
+    if (!entries || entries.length === 0) return { success: false };
+
+    jsonStr = await Neutralino.filesystem.readFile(entries[0]);
+  } else {
+    // Web fallback: file input
+    jsonStr = await new Promise<string>((resolve, reject) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = () => {
+        const file = input.files?.[0];
+        if (!file) return reject(new Error('No file selected'));
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+      };
+      input.click();
+    });
+  }
+
+  const data = JSON.parse(jsonStr);
+
+  if (!isValidExport(data)) {
+    throw new Error('Invalid backup file format');
+  }
+
+  transaction(() => {
+    execute('DELETE FROM task_links');
+    execute('DELETE FROM tasks');
+
+    for (const t of data.tasks as unknown as Record<string, unknown>[]) {
+      if (
+        typeof t.id !== 'string' || !UUID_RE.test(t.id) ||
+        typeof t.title !== 'string' || t.title.length === 0 ||
+        !VALID_BOARDS.includes(t.board as any) ||
+        !VALID_PRIORITIES.includes(t.priority as any)
+      ) {
+        throw new Error('Invalid task data in backup');
+      }
+      execute(
+        `INSERT INTO tasks (id, title, description, done, board, priority, position, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          t.id,
+          t.title,
+          t.description ?? null,
+          t.done ?? 0,
+          t.board,
+          t.priority,
+          t.position ?? 0,
+          t.created_at ?? new Date().toISOString(),
+          t.updated_at ?? new Date().toISOString(),
+        ]
+      );
+    }
+
+    for (const l of data.taskLinks as unknown as Record<string, unknown>[]) {
+      if (
+        typeof l.id !== 'string' || !UUID_RE.test(l.id) ||
+        typeof l.source_task_id !== 'string' || !UUID_RE.test(l.source_task_id) ||
+        typeof l.target_task_id !== 'string' || !UUID_RE.test(l.target_task_id) ||
+        !VALID_LINK_TYPES.includes(l.type as any)
+      ) {
+        throw new Error('Invalid task link data in backup');
+      }
+      execute(
+        `INSERT INTO task_links (id, source_task_id, target_task_id, type, created_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          l.id,
+          l.source_task_id,
+          l.target_task_id,
+          l.type,
+          l.created_at ?? new Date().toISOString(),
+        ]
+      );
+    }
+  });
+
+  await forceSave();
+  return { success: true, taskCount: data.tasks.length };
+}
+
+// ─── Unified API Object ─────────────────────────────────────
+
+const api = {
+  tasks: {
+    getAll: async (board?: string) => getTasks(board),
+    get: async (id: string) => getTask(id)!,
+    create: async (task: CreateTaskInput) => createTask(task),
+    update: async (id: string, updates: UpdateTaskInput) => updateTask(id, updates)!,
+    delete: async (id: string) => deleteTask(id),
+    toggle: async (id: string) => toggleTask(id),
+    move: async (id: string, board: string) => moveTask(id, board),
+    reorder: async (id: string, newPosition: number) => reorderTask(id, newPosition),
+    search: async (query: string) => searchTasks(query),
+    deleteOlderThan: async (days: number) => deleteOlderThan(days),
+  },
+  taskLinks: {
+    get: async (taskId: string) => getTaskLinks(taskId),
+    create: async (link: CreateTaskLinkInput) => createTaskLink(link),
+    delete: async (id: string) => deleteTaskLink(id),
+  },
+  app: {
+    getInfo: () => getAppInfo(),
+    openExternal: (url: string) => openExternal(url),
+  },
+  data: {
+    export: () => exportData(),
+    import: () => importData(),
+  },
+};
+
+export default api;

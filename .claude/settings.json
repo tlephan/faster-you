@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx neu build --help)"
+    ]
+  }
+}
