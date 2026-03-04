@@ -236,7 +236,7 @@ export default function App() {
       <header className="border-b bg-muted/60 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-bold text-foreground">Faster You</h1>
+            <h1 className="text-lg text-foreground" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700 }}>Faster You</h1>
           </div>
           <div className="flex items-center gap-2">
             {/* Search */}
