@@ -303,10 +303,15 @@ async function exportData(): Promise<{ success: boolean }> {
 
   if (isNeutralinoAvailable()) {
     const Neutralino = (window as any).Neutralino;
-    const defaultName = `fastnfocus-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const defaultName = `fasteryou-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const homePath = await Neutralino.os.getPath('downloads').catch(() => null)
+      ?? await Neutralino.os.getPath('home').catch(() => null)
+      ?? (window as any).NL_PATH;
+    const defaultPath = `${homePath}/${defaultName}`;
 
+    await Neutralino.window.focus();
     const filePath = await Neutralino.os.showSaveDialog('Export Data', {
-      defaultPath: defaultName,
+      defaultPath,
       filters: [{ name: 'JSON files', extensions: ['json'] }],
     });
 
@@ -320,7 +325,7 @@ async function exportData(): Promise<{ success: boolean }> {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `fastnfocus-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `fasteryou-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     return { success: true };
@@ -332,9 +337,10 @@ async function importData(): Promise<{ success: boolean; taskCount?: number }> {
 
   if (isNeutralinoAvailable()) {
     const Neutralino = (window as any).Neutralino;
+    await Neutralino.window.focus();
     const entries = await Neutralino.os.showOpenDialog('Import Data', {
       filters: [{ name: 'JSON files', extensions: ['json'] }],
-      multiSelections: false,
+      multiselect: false,
     });
 
     if (!entries || entries.length === 0) return { success: false };

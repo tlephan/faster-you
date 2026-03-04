@@ -78,8 +78,8 @@ export function SettingsDialog({
           {/* Theme */}
           <div className="flex items-center justify-between border-b pb-5">
             <div>
-              <p className="text-sm font-medium">Theme</p>
-              <p className="text-xs text-muted-foreground">Choose your preferred appearance</p>
+              <p className="text-sm font-medium">Appearance</p>
+              <p className="text-xs text-muted-foreground">Prefered theme</p>
             </div>
             <div className="flex gap-1">
               {([
@@ -110,7 +110,7 @@ export function SettingsDialog({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Font size</p>
-                <p className="text-xs text-muted-foreground">Scale text across the app</p>
+                <p className="text-xs text-muted-foreground">Scale text</p>
               </div>
               <div className="flex gap-1">
                 {(['small', 'medium', 'large'] as FontSize[]).map((size) => (
