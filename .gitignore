@@ -34,3 +34,6 @@ npm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Claude
+.claude/settings.json
