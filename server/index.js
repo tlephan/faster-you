@@ -4,13 +4,32 @@
  * Runs on http://127.0.0.1:3001
  */
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, appendFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import Database from 'better-sqlite3';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
+const projectRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+
+// ── Logging ───────────────────────────────────────────────────
+const logDir = join(projectRoot, '.log');
+if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
+const logFile = join(logDir, 'server.log');
+
+function log(...args) {
+  const line = `[${new Date().toISOString()}] ${args.join(' ')}`;
+  console.log(line);
+  appendFileSync(logFile, line + '\n');
+}
+
+function logError(...args) {
+  const line = `[${new Date().toISOString()}] ERROR ${args.join(' ')}`;
+  console.error(line);
+  appendFileSync(logFile, line + '\n');
+}
 
 // ── Database setup ────────────────────────────────────────────
 const dbDir = join(homedir(), '.fasteryou');
@@ -75,6 +94,14 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://127.0.0.1:${PORT}`);
   const path = url.pathname;
   const method = req.method;
+  const query = url.search || '';
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    const line = `${method} ${path}${query} → ${res.statusCode} (${ms}ms)`;
+    res.statusCode >= 400 ? logError(line) : log(line);
+  });
 
   try {
     // Health check
@@ -221,12 +248,13 @@ const server = createServer(async (req, res) => {
 
     json(res, 404, { error: 'Not found' });
   } catch (err) {
-    console.error('[Server] Error:', err);
+    logError(`${method} ${path} —`, err);
     json(res, 500, { error: String(err) });
   }
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`[Server] http://127.0.0.1:${PORT}`);
-  console.log(`[Server] Database: ${dbPath}`);
+  log(`[Server] http://127.0.0.1:${PORT}`);
+  log(`[Server] Database: ${dbPath}`);
+  log(`[Server] Log file: ${logFile}`);
 });
