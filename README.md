@@ -2,7 +2,7 @@
 
 > A fast, secure, minimal task manager for web and desktop (macOS, Windows, Linux).
 
-![Demo Screenshot](screenshot.png)
+![Demo Screenshot](screenshot-dark.png)
 
 ## Features
 
