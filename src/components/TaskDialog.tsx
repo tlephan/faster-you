@@ -13,7 +13,7 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
-  const [board, setBoard] = useState<'today' | 'backlog'>('backlog');
+  const [board, setBoard] = useState<'today' | 'backlog'>('today');
 
   const [error, setError] = useState<string | null>(null);
   const createTask = useCreateTask();
@@ -33,7 +33,7 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
       setTitle('');
       setDescription('');
       setPriority('medium');
-      setBoard('backlog');
+      setBoard('today');
     }
   }, [task, open]);
 

@@ -236,10 +236,20 @@ export default function App() {
       <header className="border-b bg-slate-800 dark:bg-slate-950 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="flex items-center gap-1.5 text-xl text-white logo-title">
+            <h1
+              onClick={() => window.location.reload()}
+              className="flex cursor-pointer items-center gap-1.5 text-xl text-white logo-title"
+            >
               <Zap className="h-5 w-5 text-orange-500 fill-orange-500" />
               FasterYou
             </h1>
+            <button
+              onClick={handleAddTask}
+              className="flex h-8 items-center gap-1.5 rounded-md bg-orange-500 px-3 text-sm text-white hover:bg-orange-600"
+            >
+              <Plus className="h-4 w-4" />
+              Add Task
+            </button>
             <span className="rounded-full bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">
               Be focused. Get today done. No excuses.
             </span>
@@ -267,15 +277,6 @@ export default function App() {
               <option value="pending">Pending</option>
               <option value="done">Done</option>
             </select>
-
-            {/* Add Task */}
-            <button
-              onClick={handleAddTask}
-              className="flex h-8 items-center gap-1.5 rounded-md bg-orange-500 px-3 text-sm text-white hover:bg-orange-600"
-            >
-              <Plus className="h-4 w-4" />
-              Add Task
-            </button>
 
             {/* Settings */}
             <button
