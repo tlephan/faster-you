@@ -56,7 +56,7 @@ You can also develop as a plain web app (shared SQLite via local API server):
 npm run dev   # starts API server (port 8191) + Vite (port 8190)
 ```
 
-All browsers share the same SQLite database at `~/.fasteryou/fasteryou.db`. Server logs are written to `.log/server.log`.
+All browsers share the same SQLite database at `~/.fasteryou/fasteryou.db`. Server logs are written to `~/.fasteryou/logs/` with daily rotation (7-day retention).
 
 ### Production Build
 
@@ -135,6 +135,8 @@ The SQLite database is persisted via:
 - **NeutralinoJS mode** — `Neutralino.filesystem` writes to `<user-data>/fasteryou/fasteryou.db`
 - **Web mode (with server)** — `~/.fasteryou/fasteryou.db` via `better-sqlite3` (shared across all browsers)
 - **Web mode (no server)** — Falls back to IndexedDB in the browser
+
+Server logs are stored at `~/.fasteryou/logs/server-YYYY-MM-DD.log` (one file per day, auto-rotated with 7-day retention).
 
 ## License
 
