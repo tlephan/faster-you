@@ -2,12 +2,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { queryAll, queryOne, execute, getChanges, transaction, forceSave } from './db';
 
 // ── Server mode (web only) ────────────────────────────────────
-const SERVER_URL = 'http://127.0.0.1:8191';
+const DEV_SERVER_URL = 'http://127.0.0.1:8191';
+const SERVER_URL = import.meta.env.DEV ? DEV_SERVER_URL : '';
 let serverMode = false;
 
 export async function detectServer(): Promise<boolean> {
   try {
-    const res = await fetch(`${SERVER_URL}/ping`, { signal: AbortSignal.timeout(600) });
+    const pingUrl = import.meta.env.DEV ? `${DEV_SERVER_URL}/ping` : '/ping';
+    const res = await fetch(pingUrl, { signal: AbortSignal.timeout(600) });
     serverMode = res.ok;
   } catch {
     serverMode = false;

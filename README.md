@@ -110,6 +110,24 @@ Helper scripts for launching and stopping the web app are in `scripts/`:
 
 3. Double-click the `.ahk` file to activate, or place in `shell:startup` to auto-load on login
 
+## Docker
+
+Build and run as a single container serving both the frontend and API:
+
+```bash
+# Build
+docker build -t fasteryou .
+
+# Run (persist data with a volume)
+docker run -d -p 8191:8191 -v fasteryou-data:/root/.fasteryou fasteryou
+```
+
+Open `http://localhost:8191`. To use a custom port:
+
+```bash
+docker run -d -p 3000:3000 -e PORT=3000 -v fasteryou-data:/root/.fasteryou fasteryou
+```
+
 ## Data Storage
 
 The SQLite database is persisted via:

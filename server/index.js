@@ -4,8 +4,8 @@
  * Runs on http://127.0.0.1:8191
  */
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync, appendFileSync, readdirSync, unlinkSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { existsSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, readFileSync, statSync } from 'node:fs';
+import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
@@ -13,6 +13,22 @@ import Database from 'better-sqlite3';
 
 const PORT = parseInt(process.env.PORT || '8191', 10);
 const projectRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+const distDir = join(projectRoot, 'dist');
+const SERVE_STATIC = existsSync(distDir);
+
+const MIME_TYPES = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.wasm': 'application/wasm',
+};
 
 // ── Logging ───────────────────────────────────────────────────
 const logDir = join(projectRoot, '.log');
@@ -263,6 +279,19 @@ const server = createServer(async (req, res) => {
       return json(res, 200, { success: true, taskCount: data.tasks.length });
     }
 
+    // ── Static file serving ────────────────────────────────────
+    if (SERVE_STATIC && method === 'GET') {
+      let filePath = join(distDir, path === '/' ? 'index.html' : path);
+      if (!existsSync(filePath) || !statSync(filePath).isFile()) {
+        filePath = join(distDir, 'index.html'); // SPA fallback
+      }
+      const ext = extname(filePath);
+      const mime = MIME_TYPES[ext] || 'application/octet-stream';
+      const content = readFileSync(filePath);
+      res.writeHead(200, { 'Content-Type': mime, ...CORS });
+      return res.end(content);
+    }
+
     json(res, 404, { error: 'Not found' });
   } catch (err) {
     logError(`${method} ${path} —`, err);
@@ -270,7 +299,8 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+const HOST = process.env.HOST || '127.0.0.1';
+server.listen(PORT, HOST, () => {
   log(`[Server] http://127.0.0.1:${PORT}`);
   log(`[Server] Database: ${dbPath}`);
   log(`[Server] Log dir: ${logDir}`);
