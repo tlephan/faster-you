@@ -28,7 +28,6 @@
 | Data Fetching | TanStack Query |
 | Build | Vite + NeutralinoJS CLI |
 
-
 ## Getting Started
 
 ### Prerequisites
@@ -54,7 +53,7 @@ This starts Vite on port 3000 and launches the Neutralino window pointing at it.
 You can also develop as a plain web app (shared SQLite via local API server):
 
 ```bash
-npm run dev:web   # starts API server (port 3001) + Vite (port 3000)
+npm run dev   # starts API server (port 3001) + Vite (port 3000)
 ```
 
 All browsers share the same SQLite database at `~/.fasteryou/fasteryou.db`. Server logs are written to `.log/server.log`.

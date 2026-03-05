@@ -4,14 +4,14 @@
   "description": "A fast, minimal task manager built with NeutralinoJS",
   "type": "module",
   "scripts": {
-    "dev:web": "concurrently \"node server/index.js\" \"vite\"",
+    "dev": "concurrently \"node server/index.js\" \"vite\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "neu:update": "npx neu update",
     "neu:run": "npx neu run",
     "neu:build": "npm run build && npx neu build --embed-resources --release",
     "typecheck": "tsc --noEmit",
-    "dev": "concurrently \"vite --port 3000\" \"wait-on http://localhost:3000 && npx neu run -- --url=http://localhost:3000\""
+    "dev:desktop": "concurrently \"vite --port 3000\" \"wait-on http://localhost:3000 && npx neu run -- --url=http://localhost:3000\""
   },
   "keywords": [
     "todo",
