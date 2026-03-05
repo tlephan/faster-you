@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Task } from '../types';
 import { TaskCard } from './TaskCard';
 import { cn } from '../lib/utils';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Inbox } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -81,9 +81,10 @@ export function BoardColumn({ title, boardId, tasks, filter, onEdit, onLinkTask 
         </SortableContext>
 
         {visibleTasks.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No tasks here
-          </p>
+          <div className="flex flex-col items-center gap-1 py-8 text-muted-foreground">
+            <Inbox className="size-8 opacity-40" />
+            <p className="text-sm">No tasks here</p>
+          </div>
         )}
 
         {/* Completed section (only in 'all' filter) */}

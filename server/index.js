@@ -1,7 +1,7 @@
 /**
  * Local API server for web mode.
  * Stores the SQLite database on disk so all browsers share the same data.
- * Runs on http://127.0.0.1:3001
+ * Runs on http://127.0.0.1:8191
  */
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, appendFileSync, readdirSync, unlinkSync } from 'node:fs';
@@ -11,7 +11,7 @@ import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import Database from 'better-sqlite3';
 
-const PORT = parseInt(process.env.PORT || '3001', 10);
+const PORT = parseInt(process.env.PORT || '8191', 10);
 const projectRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 // ── Logging ───────────────────────────────────────────────────

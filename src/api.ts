@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { queryAll, queryOne, execute, getChanges, transaction, forceSave } from './db';
 
 // ── Server mode (web only) ────────────────────────────────────
-const SERVER_URL = 'http://127.0.0.1:3001';
+const SERVER_URL = 'http://127.0.0.1:8191';
 let serverMode = false;
 
 export async function detectServer(): Promise<boolean> {

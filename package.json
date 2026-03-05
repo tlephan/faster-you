@@ -11,7 +11,7 @@
     "neu:run": "npx neu run",
     "neu:build": "npm run build && npx neu build --embed-resources --release",
     "typecheck": "tsc --noEmit",
-    "dev:desktop": "concurrently \"vite --port 3000\" \"wait-on http://localhost:3000 && npx neu run -- --url=http://localhost:3000\""
+    "dev:desktop": "concurrently \"vite --port 8190\" \"wait-on http://localhost:8190 && npx neu run -- --url=http://localhost:8190\""
   },
   "keywords": [
     "todo",

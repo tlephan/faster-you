@@ -6,13 +6,13 @@ PROJECT="/Users/thanhphan/Documents/Workspace-Me/github/faster-you"
 NPM="/opt/homebrew/bin/npm"
 
 # Start dev server if not already running
-if ! lsof -i :3001 -sTCP:LISTEN -t >/dev/null 2>&1; then
+if ! lsof -i :8191 -sTCP:LISTEN -t >/dev/null 2>&1; then
   cd "$PROJECT"
   $NPM run dev:web &>/dev/null &
   # Wait for API server to be ready
-  while ! curl -s http://127.0.0.1:3001/ping >/dev/null 2>&1; do
+  while ! curl -s http://127.0.0.1:8191/ping >/dev/null 2>&1; do
     sleep 0.5
   done
 fi
 
-open http://localhost:3000
+open http://localhost:8190

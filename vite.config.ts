@@ -24,6 +24,6 @@ export default defineConfig({
     include: ['sql.js'],
   },
   server: {
-    port: 3000,
+    port: 8190,
   },
 });
