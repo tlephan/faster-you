@@ -31,7 +31,7 @@ const MIME_TYPES = {
 };
 
 // ── Logging ───────────────────────────────────────────────────
-const logDir = join(projectRoot, '.log');
+const logDir = join(homedir(), '.fasteryou', 'logs');
 if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
 const LOG_RETENTION_DAYS = 7;
 
