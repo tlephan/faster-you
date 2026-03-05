@@ -344,12 +344,28 @@ async function exportData(): Promise<{ success: boolean }> {
     await Neutralino.filesystem.writeFile(filePath, jsonStr);
     return { success: true };
   } else {
-    // Web fallback: download via blob
+    // Web: use File System Access API for save dialog, fallback to blob download
+    const defaultName = `fasteryou-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: defaultName,
+          types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(jsonStr);
+        await writable.close();
+        return { success: true };
+      } catch (e: any) {
+        if (e.name === 'AbortError') return { success: false };
+        throw e;
+      }
+    }
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `fasteryou-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = defaultName;
     a.click();
     URL.revokeObjectURL(url);
     return { success: true };
@@ -518,11 +534,28 @@ const api = {
     export: async () => {
       if (serverMode) {
         const payload = await sf('/export');
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const jsonStr = JSON.stringify(payload, null, 2);
+        const defaultName = `fasteryou-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        if ('showSaveFilePicker' in window) {
+          try {
+            const handle = await (window as any).showSaveFilePicker({
+              suggestedName: defaultName,
+              types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(jsonStr);
+            await writable.close();
+            return { success: true };
+          } catch (e: any) {
+            if (e.name === 'AbortError') return { success: false };
+            throw e;
+          }
+        }
+        const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `fasteryou-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = defaultName;
         a.click();
         URL.revokeObjectURL(url);
         return { success: true };

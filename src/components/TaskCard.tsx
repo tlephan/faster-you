@@ -44,7 +44,7 @@ export function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id, data: { task } });
+  } = useSortable({ id: task.id, data: { task }, disabled: !!task.done });
 
   const style = {
     transform: CSS.Transform.toString(transform),
