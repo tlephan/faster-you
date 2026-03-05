@@ -9,6 +9,7 @@ set NPM=npm
 netstat -ano | findstr ":8191 " | findstr "LISTENING" >nul 2>&1
 if errorlevel 1 (
   cd /d "%PROJECT%"
+  call %NPM% install
   start "" /b cmd /c "%NPM% run dev"
   :: Wait for API server to be ready
   :wait
