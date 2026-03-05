@@ -74,7 +74,7 @@ export default function App() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [linkingTask, setLinkingTask] = useState<Task | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [splitRatio, setSplitRatio] = useState(0.6);
+  const [splitRatio, setSplitRatio] = useState(0.5);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const isDraggingDivider = useRef(false);
   const mainRef = useRef<HTMLElement>(null);
