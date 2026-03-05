@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Task } from '../types';
-import { useCreateTask, useUpdateTask } from '../hooks';
+import { useCreateTask, useUpdateTask, useDeleteTask } from '../hooks';
+import { Trash2 } from 'lucide-react';
 
 interface TaskDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
 
   const isEditing = !!task;
   const isPending = createTask.isPending || updateTask.isPending;
@@ -149,21 +151,36 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border px-4 py-2 text-sm hover:bg-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!title.trim() || isPending}
-              className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {isPending ? 'Saving...' : isEditing ? 'Save' : 'Add Task'}
-            </button>
+          <div className="flex items-center pt-2">
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => {
+                  deleteTask.mutate(task.id, { onSuccess: onClose });
+                }}
+                className="rounded-md border border-destructive/30 p-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                title="Delete task"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+            <div className="flex-1" />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md border px-4 py-2 text-sm hover:bg-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!title.trim() || isPending}
+                className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {isPending ? 'Saving...' : isEditing ? 'Save' : 'Add Task'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

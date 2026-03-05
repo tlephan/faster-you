@@ -2,14 +2,13 @@ import { useState } from 'react';
 import type { Task, TaskLink } from '../types';
 import {
   useToggleTask,
-  useDeleteTask,
   useMoveTask,
   useTaskLinks,
 } from '../hooks';
 import { cn } from '../lib/utils';
 import {
   GripVertical,
-  Trash2,
+
   Pencil,
   ArrowRightLeft,
   Link,
@@ -32,7 +31,7 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
   const toggleTask = useToggleTask();
-  const deleteTask = useDeleteTask();
+
   const moveTask = useMoveTask();
   const { data: links } = useTaskLinks(task.id);
   const [showLinks, setShowLinks] = useState(false);
@@ -59,7 +58,7 @@ export function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group flex items-start gap-2 rounded-lg border-y border-r bg-card p-3 shadow-sm transition-colors border-l-4 hover:border-y-primary/50 hover:border-r-primary/50',
+        'group flex items-start gap-2 rounded-lg border-y border-r bg-card p-3 shadow-sm transition-colors border-l-4 hover:bg-blue-50 hover:border-y-primary/50 hover:border-r-primary/50 dark:hover:bg-blue-950/30',
         priorityBorder[task.priority],
         isDragging && 'opacity-50',
         task.done && 'opacity-60'
@@ -160,13 +159,6 @@ export function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
       {/* Actions */}
       <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <button
-          onClick={() => onLinkTask(task)}
-          className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
-          title="Link task"
-        >
-          <Link className="h-3.5 w-3.5" />
-        </button>
-        <button
           onClick={() =>
             moveTask.mutate({ id: task.id, board: targetBoard })
           }
@@ -176,18 +168,18 @@ export function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
           <ArrowRightLeft className="h-3.5 w-3.5" />
         </button>
         <button
+          onClick={() => onLinkTask(task)}
+          className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+          title="Link task"
+        >
+          <Link className="h-3.5 w-3.5" />
+        </button>
+        <button
           onClick={() => onEdit(task)}
           className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
           title="Edit"
         >
           <Pencil className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={() => deleteTask.mutate(task.id)}
-          className="rounded p-1 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
-          title="Delete"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>
