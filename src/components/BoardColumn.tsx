@@ -62,7 +62,7 @@ export function BoardColumn({ title, boardId, tasks, filter, onEdit, onLinkTask 
       <div
         ref={setNodeRef}
         className={cn(
-          'flex-1 overflow-y-auto p-3 space-y-2 transition-colors',
+          'flex-1 overflow-y-auto p-3 space-y-2 transition-colors bg-slate-50/50 dark:bg-slate-900/30 dot-pattern',
           isOver && 'bg-accent/20'
         )}
       >
