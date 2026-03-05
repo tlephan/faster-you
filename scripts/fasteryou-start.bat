@@ -9,7 +9,7 @@ set NPM=npm
 netstat -ano | findstr ":8191 " | findstr "LISTENING" >nul 2>&1
 if errorlevel 1 (
   cd /d "%PROJECT%"
-  start "" /b cmd /c "%NPM% run dev:web"
+  start "" /b cmd /c "%NPM% run dev"
   :: Wait for API server to be ready
   :wait
   curl -s http://127.0.0.1:8191/ping >nul 2>&1
