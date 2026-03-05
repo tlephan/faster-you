@@ -59,7 +59,7 @@ export function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group flex items-start gap-2 rounded-lg border-y border-r bg-card p-3 shadow-sm transition-colors border-l-4',
+        'group flex items-start gap-2 rounded-lg border-y border-r bg-card p-3 shadow-sm transition-colors border-l-4 hover:border-y-primary/50 hover:border-r-primary/50',
         priorityBorder[task.priority],
         isDragging && 'opacity-50',
         task.done && 'opacity-60'
