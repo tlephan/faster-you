@@ -233,25 +233,27 @@ export default function App() {
   return (
     <div className="flex h-screen flex-col">
       {/* Header */}
-      <header className="border-b bg-muted/60 px-4 py-3">
+      <header className="border-b bg-slate-800 dark:bg-slate-950 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl text-foreground logo-title">FasterYou</h1>
-            <span className="flex items-center gap-1.5 rounded-full bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">
-              <Zap className="h-3 w-3 fill-current" />
+            <h1 className="flex items-center gap-1.5 text-xl text-white logo-title">
+              <Zap className="h-5 w-5 text-orange-500 fill-orange-500" />
+              FasterYou
+            </h1>
+            <span className="rounded-full bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">
               Be focused. Get today done. No excuses.
             </span>
           </div>
           <div className="flex items-center gap-2">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks..."
-                className="h-8 w-64 rounded-md border bg-background pl-8 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                className="h-8 w-64 rounded-md border border-slate-600 bg-slate-700 pl-8 pr-3 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
@@ -259,7 +261,7 @@ export default function App() {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as FilterType)}
-              className="h-8 rounded-md border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="h-8 rounded-md border border-slate-600 bg-slate-700 px-2 text-sm text-white outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="all">All</option>
               <option value="pending">Pending</option>
@@ -269,7 +271,7 @@ export default function App() {
             {/* Add Task */}
             <button
               onClick={handleAddTask}
-              className="flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-sm text-primary-foreground hover:bg-primary/90"
+              className="flex h-8 items-center gap-1.5 rounded-md bg-orange-500 px-3 text-sm text-white hover:bg-orange-600"
             >
               <Plus className="h-4 w-4" />
               Add Task
@@ -278,7 +280,7 @@ export default function App() {
             {/* Settings */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-md border hover:bg-secondary"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
               title="Settings"
             >
               <Settings className="h-4 w-4" />

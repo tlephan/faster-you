@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Task } from '../types';
 import { useCreateTask, useUpdateTask, useDeleteTask } from '../hooks';
-import { Trash2 } from 'lucide-react';
+import { Trash2, X, Plus, Save } from 'lucide-react';
 
 interface TaskDialogProps {
   open: boolean;
@@ -169,16 +169,17 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border px-4 py-2 text-sm hover:bg-secondary"
+                className="flex items-center gap-1.5 rounded-md border px-4 py-2 text-sm hover:bg-secondary"
               >
+                <X className="h-4 w-4" />
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!title.trim() || isPending}
-                className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-md bg-orange-500 px-4 py-2 text-sm text-white hover:bg-orange-600 disabled:opacity-50"
               >
-                {isPending ? 'Saving...' : isEditing ? 'Save' : 'Add Task'}
+                {isPending ? 'Saving...' : isEditing ? <><Save className="h-4 w-4" />Save</> : <><Plus className="h-4 w-4" />Add Task</>}
               </button>
             </div>
           </div>
