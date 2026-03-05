@@ -4,7 +4,7 @@
  * Runs on http://127.0.0.1:3001
  */
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync, appendFileSync } from 'node:fs';
+import { existsSync, mkdirSync, appendFileSync, readdirSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
@@ -17,18 +17,35 @@ const projectRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 // ── Logging ───────────────────────────────────────────────────
 const logDir = join(projectRoot, '.log');
 if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
-const logFile = join(logDir, 'server.log');
+const LOG_RETENTION_DAYS = 7;
+
+function getLogFile() {
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  return join(logDir, `server-${date}.log`);
+}
+
+function rotateOldLogs() {
+  const cutoff = Date.now() - LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  for (const file of readdirSync(logDir)) {
+    const match = file.match(/^server-(\d{4}-\d{2}-\d{2})\.log$/);
+    if (match && new Date(match[1]).getTime() < cutoff) {
+      unlinkSync(join(logDir, file));
+    }
+  }
+}
+
+rotateOldLogs();
 
 function log(...args) {
   const line = `[${new Date().toISOString()}] ${args.join(' ')}`;
   console.log(line);
-  appendFileSync(logFile, line + '\n');
+  appendFileSync(getLogFile(), line + '\n');
 }
 
 function logError(...args) {
   const line = `[${new Date().toISOString()}] ERROR ${args.join(' ')}`;
   console.error(line);
-  appendFileSync(logFile, line + '\n');
+  appendFileSync(getLogFile(), line + '\n');
 }
 
 // ── Database setup ────────────────────────────────────────────
@@ -256,5 +273,5 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, '127.0.0.1', () => {
   log(`[Server] http://127.0.0.1:${PORT}`);
   log(`[Server] Database: ${dbPath}`);
-  log(`[Server] Log file: ${logFile}`);
+  log(`[Server] Log dir: ${logDir}`);
 });
