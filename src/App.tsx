@@ -240,7 +240,7 @@ export default function App() {
               onClick={() => window.location.reload()}
               className="flex cursor-pointer items-center gap-1.5 text-xl text-white logo-title"
             >
-              <Zap className="h-5 w-5 text-orange-500 fill-orange-500" />
+              <Zap className="h-5 w-5 text-orange-500 fill-orange-500 logo-icon" />
               FasterYou
             </h1>
             <button

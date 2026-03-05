@@ -63,6 +63,22 @@
   font-weight: 700;
 }
 
+.logo-icon {
+  animation: flash 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.6));
+}
+
+@keyframes flash {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.6));
+  }
+  50% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 10px rgba(249, 115, 22, 1));
+  }
+}
+
 .dot-pattern {
   background-image:
     radial-gradient(circle, rgba(148, 163, 184, 0.3) 1px, transparent 1px);
