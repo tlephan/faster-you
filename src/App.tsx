@@ -119,17 +119,17 @@ export default function App() {
   const tasks = searchQuery ? searchResults || [] : allTasks || [];
 
   const todayTasks = useMemo(
-    () => tasks.filter((t) => t.board === 'today').sort((a, b) => a.position - b.position),
+    () => tasks.filter((t: Task) => t.board === 'today').sort((a: Task, b: Task) => a.position - b.position),
     [tasks]
   );
 
   const backlogTasks = useMemo(
-    () => tasks.filter((t) => t.board === 'backlog').sort((a, b) => a.position - b.position),
+    () => tasks.filter((t: Task) => t.board === 'backlog').sort((a: Task, b: Task) => a.position - b.position),
     [tasks]
   );
 
-  const pendingTodayTasks = useMemo(() => todayTasks.filter((t) => !t.done), [todayTasks]);
-  const pendingBacklogTasks = useMemo(() => backlogTasks.filter((t) => !t.done), [backlogTasks]);
+  const pendingTodayTasks = useMemo(() => todayTasks.filter((t: Task) => !t.done), [todayTasks]);
+  const pendingBacklogTasks = useMemo(() => backlogTasks.filter((t: Task) => !t.done), [backlogTasks]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const task = event.active.data.current?.task as Task | undefined;
@@ -161,8 +161,8 @@ export default function App() {
     if (draggedTask.board === targetBoardId) {
       if (!overTaskId || active.id === over.id) return;
 
-      const activeIndex = targetPendingTasks.findIndex((t) => t.id === active.id);
-      const overIndex = targetPendingTasks.findIndex((t) => t.id === overTaskId);
+      const activeIndex = targetPendingTasks.findIndex((t: Task) => t.id === active.id);
+      const overIndex = targetPendingTasks.findIndex((t: Task) => t.id === overTaskId);
 
       if (activeIndex === -1 || overIndex === -1) return;
 
@@ -186,7 +186,7 @@ export default function App() {
       } else if (!overTaskId) {
         newPosition = targetPendingTasks[targetPendingTasks.length - 1].position + 1;
       } else {
-        const overIndex = targetPendingTasks.findIndex((t) => t.id === overTaskId);
+        const overIndex = targetPendingTasks.findIndex((t: Task) => t.id === overTaskId);
         if (overIndex === 0) {
           newPosition = targetPendingTasks[0].position - 1;
         } else {

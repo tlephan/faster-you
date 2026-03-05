@@ -10,6 +10,7 @@
     "neu:update": "npx neu update",
     "neu:run": "npx neu run",
     "neu:build": "npm run build && npx neu build --embed-resources --release",
+    "typecheck": "tsc --noEmit",
     "dev": "concurrently \"vite --port 3000\" \"wait-on http://localhost:3000 && npx neu run -- --url=http://localhost:3000\""
   },
   "keywords": [

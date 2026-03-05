@@ -19,7 +19,7 @@ export function LinkTaskDialog({ open, onClose, sourceTask }: LinkTaskDialogProp
   if (!open || !sourceTask) return null;
 
   const filteredTasks = (allTasks || []).filter(
-    (t) =>
+    (t: Task) =>
       t.id !== sourceTask.id &&
       t.title.toLowerCase().includes(search.toLowerCase())
   );
@@ -91,7 +91,7 @@ export function LinkTaskDialog({ open, onClose, sourceTask }: LinkTaskDialogProp
             {filteredTasks.length === 0 ? (
               <p className="p-3 text-sm text-muted-foreground">No tasks found</p>
             ) : (
-              filteredTasks.map((task) => (
+              filteredTasks.map((task: Task) => (
                 <label
                   key={task.id}
                   className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-secondary ${
