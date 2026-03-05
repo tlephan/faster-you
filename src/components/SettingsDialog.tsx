@@ -185,10 +185,6 @@ export function SettingsDialog({
                 <span>Version</span>
                 <span className="font-mono">{appInfo?.version || 'x.x.x'}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Runtime</span>
-                <span className="font-mono">NeutralinoJS</span>
-              </div>
               <button
                 onClick={() => api.app.openExternal('https://github.com/tlephan/faster-you')}
                 className="flex items-center gap-1.5 text-primary hover:underline"

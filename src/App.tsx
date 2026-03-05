@@ -236,7 +236,7 @@ export default function App() {
       <header className="border-b bg-muted/60 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg text-foreground logo-title">FasterYou</h1>
+            <h1 className="text-xl text-foreground logo-title">FasterYou</h1>
             <span className="flex items-center gap-1.5 rounded-full bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">
               <Zap className="h-3 w-3 fill-current" />
               Be focused. Get today done. No excuses.
