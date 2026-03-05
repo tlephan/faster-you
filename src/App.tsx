@@ -6,7 +6,7 @@ import { BoardColumn } from './components/BoardColumn';
 import { TaskDialog } from './components/TaskDialog';
 import { LinkTaskDialog } from './components/LinkTaskDialog';
 import { SettingsDialog } from './components/SettingsDialog';
-import { Search, Plus, Settings, GripVertical } from 'lucide-react';
+import { Search, Plus, Settings, GripVertical, Zap } from 'lucide-react';
 import type { Task } from './types';
 import {
   DndContext,
@@ -236,7 +236,11 @@ export default function App() {
       <header className="border-b bg-muted/60 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg text-foreground" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700 }}>Faster You</h1>
+            <h1 className="text-lg text-foreground" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700 }}>FasterYou</h1>
+            <span className="flex items-center gap-1.5 rounded-full bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">
+              <Zap className="h-3 w-3 fill-current" />
+              Be focused. Get today done. No excuses.
+            </span>
           </div>
           <div className="flex items-center gap-2">
             {/* Search */}

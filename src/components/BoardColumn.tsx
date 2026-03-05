@@ -48,7 +48,7 @@ export function BoardColumn({ title, boardId, tasks, filter, onEdit, onLinkTask 
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </h2>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+        <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-400">
           {pendingTasks.length}
         </span>
         {boardId === 'today' && (
