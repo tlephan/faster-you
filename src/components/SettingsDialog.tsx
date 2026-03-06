@@ -79,7 +79,7 @@ export function SettingsDialog({
           <div className="flex items-center justify-between border-b pb-5">
             <div>
               <p className="text-sm font-medium">Appearance</p>
-              <p className="text-xs text-muted-foreground">Prefered theme</p>
+              <p className="text-xs text-muted-foreground">Preferred theme</p>
             </div>
             <div className="flex gap-1">
               {([
