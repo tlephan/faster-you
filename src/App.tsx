@@ -6,7 +6,7 @@ import { BoardColumn } from './components/BoardColumn';
 import { TaskDialog } from './components/TaskDialog';
 import { LinkTaskDialog } from './components/LinkTaskDialog';
 import { SettingsDialog } from './components/SettingsDialog';
-import { Search, Plus, Settings, GripVertical, Zap } from 'lucide-react';
+import { Search, Plus, Settings, GripVertical, Zap, X } from 'lucide-react';
 import type { Task } from './types';
 import {
   DndContext,
@@ -26,7 +26,11 @@ type FontSize = 'small' | 'medium' | 'large';
 type Theme = 'light' | 'dark' | 'system';
 
 export default function App() {
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [filter, setFilter] = useState<FilterType>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const f = params.get('filter');
+    return f === 'pending' || f === 'done' ? f : 'all';
+  });
 
   const [theme, setTheme] = useState<Theme>(() =>
     (localStorage.getItem('theme') as Theme) || 'system'
@@ -69,7 +73,31 @@ export default function App() {
     }
   }, [expirationDays]);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('search') || '';
+  });
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (searchQuery) {
+      url.searchParams.set('search', searchQuery);
+    } else {
+      url.searchParams.delete('search');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (filter && filter !== 'all') {
+      url.searchParams.set('filter', filter);
+    } else {
+      url.searchParams.delete('filter');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, [filter]);
+
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [linkingTask, setLinkingTask] = useState<Task | null>(null);
@@ -237,8 +265,7 @@ export default function App() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1
-              onClick={() => window.location.reload()}
-              className="flex cursor-pointer items-center gap-1.5 text-xl text-white logo-title"
+              className="flex items-center gap-1.5 text-xl text-white logo-title"
             >
               <Zap className="h-5 w-5 text-orange-500 fill-orange-500 logo-icon" />
               FasterYou
@@ -263,8 +290,16 @@ export default function App() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks..."
-                className="h-8 w-64 rounded-md border border-slate-600 bg-slate-700 pl-8 pr-3 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500"
+                className="h-8 w-80 rounded-md border border-slate-600 bg-slate-700 pl-8 pr-8 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
             {/* Filter */}
