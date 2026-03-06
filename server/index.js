@@ -5,7 +5,7 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, appendFileSync, readdirSync, unlinkSync, readFileSync, statSync } from 'node:fs';
-import { join, dirname, extname } from 'node:path';
+import { join, dirname, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
@@ -281,7 +281,10 @@ const server = createServer(async (req, res) => {
 
     // ── Static file serving ────────────────────────────────────
     if (SERVE_STATIC && method === 'GET') {
-      let filePath = join(distDir, path === '/' ? 'index.html' : path);
+      let filePath = resolve(distDir, path === '/' ? 'index.html' : path.slice(1));
+      if (!filePath.startsWith(distDir + '/') && filePath !== distDir) {
+        return json(res, 403, { error: 'Forbidden' });
+      }
       if (!existsSync(filePath) || !statSync(filePath).isFile()) {
         filePath = join(distDir, 'index.html'); // SPA fallback
       }
