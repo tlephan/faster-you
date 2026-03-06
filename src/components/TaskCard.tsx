@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import type { Task, TaskLink } from '../types';
 import {
   useToggleTask,
@@ -29,7 +29,7 @@ interface TaskCardProps {
   onLinkTask: (task: Task) => void;
 }
 
-export function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
   const toggleTask = useToggleTask();
 
   const moveTask = useMoveTask();
@@ -184,4 +184,4 @@ export function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
       </div>
     </div>
   );
-}
+});

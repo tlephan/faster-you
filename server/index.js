@@ -162,7 +162,7 @@ const server = createServer(async (req, res) => {
     if (method === 'DELETE' && path === '/tasks/older-than') {
       const { days } = await readBody(req);
       const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-      const { changes } = db.prepare('DELETE FROM tasks WHERE created_at < ?').run(cutoff);
+      const { changes } = db.prepare('DELETE FROM tasks WHERE done = 1 AND created_at < ?').run(cutoff);
       return json(res, 200, { deleted: changes });
     }
 

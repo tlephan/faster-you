@@ -216,7 +216,7 @@ function deleteOlderThan(days: number): { deleted: number } {
     throw new Error('days must be an integer between 1 and 36500');
   }
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-  execute('DELETE FROM tasks WHERE created_at < ?', [cutoff]);
+  execute('DELETE FROM tasks WHERE done = 1 AND created_at < ?', [cutoff]);
   const deleted = getChanges();
   return { deleted };
 }

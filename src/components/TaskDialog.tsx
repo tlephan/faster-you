@@ -86,7 +86,7 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              maxLength={128}
+              maxLength={255}
               className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="Task title..."
               autoFocus
@@ -99,7 +99,7 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              maxLength={512}
+              maxLength={5000}
               className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="Optional description..."
               rows={3}
@@ -158,7 +158,9 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
               <button
                 type="button"
                 onClick={() => {
-                  deleteTask.mutate(task.id, { onSuccess: onClose });
+                  if (window.confirm(`Delete "${task.title}"?`)) {
+                    deleteTask.mutate(task.id, { onSuccess: onClose });
+                  }
                 }}
                 className="rounded-md border border-destructive/30 p-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 title="Delete task"
