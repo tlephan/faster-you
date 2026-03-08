@@ -7,6 +7,7 @@ import { TaskDialog } from './components/TaskDialog';
 import { LinkTaskDialog } from './components/LinkTaskDialog';
 import { SettingsDialog } from './components/SettingsDialog';
 import { Search, Plus, Settings, GripVertical, Zap, X } from 'lucide-react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import type { Task } from './types';
 import {
   DndContext,
@@ -336,28 +337,32 @@ export default function App() {
       >
         <main ref={mainRef} className="flex flex-1 overflow-hidden">
           <div style={{ width: `${splitRatio * 100}%` }} className="flex overflow-hidden">
-            <BoardColumn
-              title="Today"
-              boardId="today"
-              tasks={todayTasks}
-              filter={filter}
-              onEdit={handleEdit}
-              onLinkTask={handleLinkTask}
-            />
+            <ErrorBoundary>
+              <BoardColumn
+                title="Today"
+                boardId="today"
+                tasks={todayTasks}
+                filter={filter}
+                onEdit={handleEdit}
+                onLinkTask={handleLinkTask}
+              />
+            </ErrorBoundary>
           </div>
           <div
             className="w-1 bg-border hover:bg-primary/40 cursor-col-resize flex-shrink-0 transition-colors"
             onMouseDown={handleDividerMouseDown}
           />
           <div style={{ width: `${(1 - splitRatio) * 100}%` }} className="flex overflow-hidden">
-            <BoardColumn
-              title="Backlog"
-              boardId="backlog"
-              tasks={backlogTasks}
-              filter={filter}
-              onEdit={handleEdit}
-              onLinkTask={handleLinkTask}
-            />
+            <ErrorBoundary>
+              <BoardColumn
+                title="Backlog"
+                boardId="backlog"
+                tasks={backlogTasks}
+                filter={filter}
+                onEdit={handleEdit}
+                onLinkTask={handleLinkTask}
+              />
+            </ErrorBoundary>
           </div>
         </main>
 

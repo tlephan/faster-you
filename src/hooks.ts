@@ -2,6 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from './api';
 import type { CreateTaskInput, UpdateTaskInput, CreateTaskLinkInput } from './types';
 
+function logMutationError(operation: string) {
+  return (error: Error) => {
+    console.error(`[${operation}] failed:`, error.message);
+  };
+}
+
 export function useTasks(board?: string) {
   return useQuery({
     queryKey: ['tasks', board],
@@ -24,6 +30,7 @@ export function useCreateTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: logMutationError('createTask'),
   });
 }
 
@@ -35,6 +42,7 @@ export function useUpdateTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: logMutationError('updateTask'),
   });
 }
 
@@ -45,6 +53,7 @@ export function useDeleteTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: logMutationError('deleteTask'),
   });
 }
 
@@ -55,6 +64,7 @@ export function useToggleTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: logMutationError('toggleTask'),
   });
 }
 
@@ -65,6 +75,7 @@ export function useMoveTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: logMutationError('moveTask'),
   });
 }
 
@@ -76,6 +87,7 @@ export function useReorderTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: logMutationError('reorderTask'),
   });
 }
 
@@ -94,6 +106,7 @@ export function useCreateTaskLink() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['taskLinks'] });
     },
+    onError: logMutationError('createTaskLink'),
   });
 }
 
@@ -104,6 +117,7 @@ export function useDeleteTaskLink() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['taskLinks'] });
     },
+    onError: logMutationError('deleteTaskLink'),
   });
 }
 

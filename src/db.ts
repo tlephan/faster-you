@@ -5,7 +5,23 @@
 // @ts-expect-error sql.js does not ship type declarations
 import * as sqlModule from 'sql.js';
 const initSqlJs: any = (sqlModule as any).default || sqlModule;
-type Database = any;
+
+interface SqlJsStatement {
+  bind(params: unknown[]): void;
+  step(): boolean;
+  getAsObject(): Record<string, unknown>;
+  free(): void;
+}
+
+interface SqlJsDatabase {
+  run(sql: string, params?: unknown[]): void;
+  exec(sql: string): Array<{ columns: string[]; values: unknown[][] }>;
+  prepare(sql: string): SqlJsStatement;
+  export(): Uint8Array;
+  close(): void;
+}
+
+type Database = SqlJsDatabase;
 
 let db: Database | null = null;
 let dbPath: string = '';
@@ -232,12 +248,12 @@ export async function initDatabase(): Promise<void> {
   }
 
   // Enable foreign keys
-  db.run('PRAGMA foreign_keys = ON');
+  db!.run('PRAGMA foreign_keys = ON');
 
   // Check current version
   let currentVersion = 0;
   try {
-    const result = db.exec('SELECT MAX(version) as version FROM schema_version');
+    const result = db!.exec('SELECT MAX(version) as version FROM schema_version');
     if (result.length > 0 && result[0].values.length > 0) {
       currentVersion = (result[0].values[0][0] as number) || 0;
     }
@@ -249,7 +265,7 @@ export async function initDatabase(): Promise<void> {
   for (const migration of MIGRATIONS) {
     if (migration.version > currentVersion) {
       for (const sql of migration.up) {
-        db.run(sql);
+        db!.run(sql);
       }
     }
   }
@@ -272,7 +288,7 @@ export function getDb(): Database {
 export function queryAll<T = Record<string, unknown>>(sql: string, params: unknown[] = []): T[] {
   const d = getDb();
   const stmt = d.prepare(sql);
-  stmt.bind(params as any[]);
+  stmt.bind(params);
 
   const results: T[] = [];
   while (stmt.step()) {
@@ -295,7 +311,7 @@ export function queryOne<T = Record<string, unknown>>(sql: string, params: unkno
  */
 export function execute(sql: string, params: unknown[] = []): void {
   const d = getDb();
-  d.run(sql, params as any[]);
+  d.run(sql, params);
   scheduleSave();
 }
 
@@ -356,6 +372,6 @@ export async function importDb(data: Uint8Array): Promise<void> {
   }
   
   db = new SQL.Database(data);
-  db.run('PRAGMA foreign_keys = ON');
+  db!.run('PRAGMA foreign_keys = ON');
   await saveDbToDisk();
 }
