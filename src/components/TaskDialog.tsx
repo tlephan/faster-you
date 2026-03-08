@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import type { Task } from '../types';
 import { useCreateTask, useUpdateTask, useDeleteTask } from '../hooks';
-import { Trash2, X, Plus, Save } from 'lucide-react';
+import { Trash2, X, Plus, Save, AlertTriangle } from 'lucide-react';
+import { toast } from './Toast';
 
 interface TaskDialogProps {
   open: boolean;
   onClose: () => void;
   task?: Task | null; // null = create, Task = edit
+  defaultBoard?: 'today' | 'backlog';
 }
 
-export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
+export function TaskDialog({ open, onClose, task, defaultBoard = 'today' }: TaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
-  const [board, setBoard] = useState<'today' | 'backlog'>('today');
+  const [board, setBoard] = useState<'today' | 'backlog'>(defaultBoard);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const createTask = useCreateTask();
@@ -33,9 +36,10 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
       setTitle('');
       setDescription('');
       setPriority('medium');
-      setBoard('today');
+      setBoard(defaultBoard);
     }
-  }, [task, open]);
+    setConfirmDelete(false);
+  }, [task, open, defaultBoard]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,16 +156,52 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
             <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
           )}
 
-          {/* Actions */}
-          <div className="flex items-center pt-2">
-            {isEditing && (
+          {/* Delete Confirmation */}
+          {isEditing && confirmDelete && (
+            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2">
+              <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+              <span className="text-sm text-destructive">Delete this task?</span>
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="rounded px-2 py-1 text-xs hover:bg-secondary"
+              >
+                Cancel
+              </button>
               <button
                 type="button"
                 onClick={() => {
-                  if (window.confirm(`Delete "${task.title}"?`)) {
-                    deleteTask.mutate(task.id, { onSuccess: onClose });
-                  }
+                  const deletedTask = task;
+                  deleteTask.mutate(task.id, {
+                    onSuccess: () => {
+                      onClose();
+                      toast(`Deleted "${deletedTask.title}"`, {
+                        onUndo: () => {
+                          createTask.mutate({
+                            title: deletedTask.title,
+                            description: deletedTask.description || undefined,
+                            priority: deletedTask.priority,
+                            board: deletedTask.board,
+                          });
+                        },
+                      });
+                    },
+                  });
                 }}
+                className="rounded bg-destructive px-2 py-1 text-xs text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </button>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center pt-2">
+            {isEditing && !confirmDelete && (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
                 className="rounded-md border border-destructive/30 p-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 title="Delete task"
               >

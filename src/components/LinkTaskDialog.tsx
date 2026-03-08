@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import type { Task } from '../types';
-import { useTasks, useCreateTaskLink } from '../hooks';
+import type { Task, TaskLink } from '../types';
+import { useTasks, useCreateTaskLink, useTaskLinks, useDeleteTaskLink } from '../hooks';
+import { Link, Trash2 } from 'lucide-react';
 
 interface LinkTaskDialogProps {
   open: boolean;
@@ -14,9 +15,13 @@ export function LinkTaskDialog({ open, onClose, sourceTask }: LinkTaskDialogProp
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const { data: allTasks } = useTasks();
+  const { data: existingLinks } = useTaskLinks(sourceTask?.id || '');
   const createLink = useCreateTaskLink();
+  const deleteLink = useDeleteTaskLink();
 
   if (!open || !sourceTask) return null;
+
+  const taskLinks = existingLinks || [];
 
   const filteredTasks = (allTasks || []).filter(
     (t: Task) =>
@@ -53,6 +58,44 @@ export function LinkTaskDialog({ open, onClose, sourceTask }: LinkTaskDialogProp
         </div>
 
         <div className="space-y-4">
+          {/* Existing Links */}
+          {taskLinks.length > 0 && (
+            <div>
+              <label className="text-sm font-medium flex items-center gap-1.5">
+                <Link className="h-3.5 w-3.5" />
+                Current links ({taskLinks.length})
+              </label>
+              <div className="mt-1 max-h-32 overflow-y-auto rounded-md border divide-y">
+                {taskLinks.map((link: TaskLink) => {
+                  const isSource = link.source_task_id === sourceTask.id;
+                  const linkedTitle = isSource ? link.target_title : link.source_title;
+                  const displayType = isSource
+                    ? link.type
+                    : link.type === 'blocks'
+                      ? 'blocked_by'
+                      : link.type === 'blocked_by'
+                        ? 'blocks'
+                        : 'related';
+                  return (
+                    <div key={link.id} className="flex items-center justify-between px-3 py-1.5 text-xs">
+                      <span className="text-muted-foreground">
+                        <span className="font-medium text-foreground">{displayType.replace('_', ' ')}</span>
+                        {' '}{linkedTitle}
+                      </span>
+                      <button
+                        onClick={() => deleteLink.mutate(link.id)}
+                        className="rounded p-0.5 text-muted-foreground hover:text-destructive"
+                        title="Remove link"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Search */}
           <div>
             <label className="text-sm font-medium">Search</label>

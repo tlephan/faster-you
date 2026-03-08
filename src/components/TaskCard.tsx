@@ -5,6 +5,7 @@ import {
   useMoveTask,
   useTaskLinks,
 } from '../hooks';
+import { toast } from './Toast';
 import { cn } from '../lib/utils';
 import {
   GripVertical,
@@ -159,9 +160,16 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, onLinkTask }: Tas
       {/* Actions */}
       <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <button
-          onClick={() =>
-            moveTask.mutate({ id: task.id, board: targetBoard })
-          }
+          onClick={() => {
+            const fromBoard = task.board;
+            moveTask.mutate({ id: task.id, board: targetBoard }, {
+              onSuccess: () => {
+                toast(`Moved to ${targetBoard}`, {
+                  onUndo: () => moveTask.mutate({ id: task.id, board: fromBoard }),
+                });
+              },
+            });
+          }}
           className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
           title={`Move to ${targetBoard}`}
         >

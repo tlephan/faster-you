@@ -134,8 +134,8 @@ export function searchTasks(query: string): Task[] {
   assertText(query, 'query', MAX_SEARCH_LENGTH);
   const pattern = `%${query}%`;
   return queryAll<Task>(
-    'SELECT * FROM tasks WHERE title LIKE ? ORDER BY board, position ASC',
-    [pattern]
+    'SELECT * FROM tasks WHERE title LIKE ? OR description LIKE ? ORDER BY board, position ASC',
+    [pattern, pattern]
   );
 }
 

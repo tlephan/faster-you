@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from './api';
-import type { CreateTaskInput, UpdateTaskInput, CreateTaskLinkInput } from './types';
+import type { Task, CreateTaskInput, UpdateTaskInput, CreateTaskLinkInput } from './types';
 
 function logMutationError(operation: string) {
   return (error: Error) => {
@@ -39,10 +39,25 @@ export function useUpdateTask() {
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: UpdateTaskInput }) =>
       api.tasks.update(id, updates),
-    onSuccess: () => {
+    onMutate: async ({ id, updates }) => {
+      await qc.cancelQueries({ queryKey: ['tasks'] });
+      const previous = qc.getQueryData<Task[]>(['tasks', undefined]);
+      if (previous) {
+        qc.setQueryData<Task[]>(['tasks', undefined], (old) =>
+          old?.map((t) => (t.id === id ? { ...t, ...updates } : t))
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(['tasks', undefined], context.previous);
+      }
+      logMutationError('updateTask')(_err);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
-    onError: logMutationError('updateTask'),
   });
 }
 
@@ -50,10 +65,25 @@ export function useDeleteTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.tasks.delete(id),
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['tasks'] });
+      const previous = qc.getQueryData<Task[]>(['tasks', undefined]);
+      if (previous) {
+        qc.setQueryData<Task[]>(['tasks', undefined], (old) =>
+          old?.filter((t) => t.id !== id)
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        qc.setQueryData(['tasks', undefined], context.previous);
+      }
+      logMutationError('deleteTask')(_err);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
-    onError: logMutationError('deleteTask'),
   });
 }
 
@@ -61,10 +91,25 @@ export function useToggleTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.tasks.toggle(id),
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['tasks'] });
+      const previous = qc.getQueryData<Task[]>(['tasks', undefined]);
+      if (previous) {
+        qc.setQueryData<Task[]>(['tasks', undefined], (old) =>
+          old?.map((t) => (t.id === id ? { ...t, done: t.done ? 0 : 1 } : t))
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        qc.setQueryData(['tasks', undefined], context.previous);
+      }
+      logMutationError('toggleTask')(_err);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
-    onError: logMutationError('toggleTask'),
   });
 }
 
@@ -72,10 +117,25 @@ export function useMoveTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, board }: { id: string; board: string }) => api.tasks.move(id, board),
-    onSuccess: () => {
+    onMutate: async ({ id, board }) => {
+      await qc.cancelQueries({ queryKey: ['tasks'] });
+      const previous = qc.getQueryData<Task[]>(['tasks', undefined]);
+      if (previous) {
+        qc.setQueryData<Task[]>(['tasks', undefined], (old) =>
+          old?.map((t) => (t.id === id ? { ...t, board: board as Task['board'] } : t))
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(['tasks', undefined], context.previous);
+      }
+      logMutationError('moveTask')(_err);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
-    onError: logMutationError('moveTask'),
   });
 }
 
@@ -84,10 +144,25 @@ export function useReorderTask() {
   return useMutation({
     mutationFn: ({ id, position }: { id: string; position: number }) =>
       api.tasks.reorder(id, position),
-    onSuccess: () => {
+    onMutate: async ({ id, position }) => {
+      await qc.cancelQueries({ queryKey: ['tasks'] });
+      const previous = qc.getQueryData<Task[]>(['tasks', undefined]);
+      if (previous) {
+        qc.setQueryData<Task[]>(['tasks', undefined], (old) =>
+          old?.map((t) => (t.id === id ? { ...t, position } : t))
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(['tasks', undefined], context.previous);
+      }
+      logMutationError('reorderTask')(_err);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
-    onError: logMutationError('reorderTask'),
   });
 }
 

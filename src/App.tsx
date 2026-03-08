@@ -8,6 +8,7 @@ import { LinkTaskDialog } from './components/LinkTaskDialog';
 import { SettingsDialog } from './components/SettingsDialog';
 import { Search, Plus, Settings, GripVertical, Zap, X } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ToastContainer } from './components/Toast';
 import type { Task } from './types';
 import {
   DndContext,
@@ -108,6 +109,7 @@ export default function App() {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const isDraggingDivider = useRef(false);
   const mainRef = useRef<HTMLElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const queryClient = useQueryClient();
   const reorderTask = useReorderTask();
@@ -252,10 +254,35 @@ export default function App() {
     setLinkingTask(task);
   };
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (taskDialogOpen) { handleCloseTaskDialog(); return; }
+        if (linkingTask) { setLinkingTask(null); return; }
+        if (settingsOpen) { setSettingsOpen(false); return; }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        handleAddTask();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  });
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Loading tasks...</p>
+        </div>
       </div>
     );
   }
@@ -288,10 +315,11 @@ export default function App() {
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tasks..."
+                placeholder="Search tasks... (Ctrl+F)"
                 className="h-8 w-80 rounded-md border border-slate-600 bg-slate-700 pl-8 pr-8 text-sm text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500"
               />
               {searchQuery && (
@@ -397,6 +425,7 @@ export default function App() {
         expirationDays={expirationDays}
         onExpirationDaysChange={setExpirationDays}
       />
+      <ToastContainer />
     </div>
   );
 }

@@ -153,9 +153,10 @@ const server = createServer(async (req, res) => {
 
     if (method === 'GET' && path === '/tasks/search') {
       const q = url.searchParams.get('q') || '';
+      const pattern = `%${q}%`;
       const tasks = db
-        .prepare('SELECT * FROM tasks WHERE title LIKE ? ORDER BY board, position ASC')
-        .all(`%${q}%`);
+        .prepare('SELECT * FROM tasks WHERE title LIKE ? OR description LIKE ? ORDER BY board, position ASC')
+        .all(pattern, pattern);
       return json(res, 200, { tasks });
     }
 
