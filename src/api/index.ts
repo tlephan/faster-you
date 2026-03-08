@@ -2,7 +2,7 @@ import { sf, isServerMode } from './http';
 import {
   getTasks, getTask, createTask, updateTask, deleteTask,
   toggleTask, moveTask, reorderTask, searchTasks, deleteOlderThan,
-  getTaskLinks, createTaskLink, deleteTaskLink,
+  getAllTaskLinks, getTaskLinks, createTaskLink, deleteTaskLink,
 } from './local';
 import { exportData, importData, getAppInfo, openExternal } from './export';
 import type { CreateTaskInput, UpdateTaskInput, CreateTaskLinkInput } from '../types';
@@ -53,6 +53,10 @@ const api = {
     },
   },
   taskLinks: {
+    getAll: async () => {
+      if (isServerMode()) return (await sf('/task-links')).links;
+      return getAllTaskLinks();
+    },
     get: async (taskId: string) => {
       if (isServerMode()) return (await sf(`/task-links/${taskId}`)).links;
       return getTaskLinks(taskId);

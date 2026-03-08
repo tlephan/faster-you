@@ -3,7 +3,6 @@ import type { Task, TaskLink } from '../types';
 import {
   useToggleTask,
   useMoveTask,
-  useTaskLinks,
 } from '../hooks';
 import { toast } from './Toast';
 import { cn } from '../lib/utils';
@@ -26,15 +25,15 @@ const priorityBorder = {
 
 interface TaskCardProps {
   task: Task;
+  links: TaskLink[];
   onEdit: (task: Task) => void;
   onLinkTask: (task: Task) => void;
 }
 
-export const TaskCard = memo(function TaskCard({ task, onEdit, onLinkTask }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, links, onEdit, onLinkTask }: TaskCardProps) {
   const toggleTask = useToggleTask();
 
   const moveTask = useMoveTask();
-  const { data: links } = useTaskLinks(task.id);
   const [showLinks, setShowLinks] = useState(false);
 
   const {
@@ -52,7 +51,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, onLinkTask }: Tas
   };
 
   const targetBoard = task.board === 'today' ? 'backlog' : 'today';
-  const taskLinks = links || [];
+  const taskLinks = links;
 
   return (
     <div

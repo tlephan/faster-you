@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { Task } from '../types';
+import { useMemo, useState } from 'react';
+import type { Task, TaskLink } from '../types';
 import { TaskCard } from './TaskCard';
 import { cn } from '../lib/utils';
 import { ChevronRight, Inbox } from 'lucide-react';
@@ -15,13 +15,29 @@ interface BoardColumnProps {
   title: string;
   boardId: string;
   tasks: Task[];
+  allLinks: TaskLink[];
   filter: FilterType;
   onEdit: (task: Task) => void;
   onLinkTask: (task: Task) => void;
 }
 
-export function BoardColumn({ title, boardId, tasks, filter, onEdit, onLinkTask }: BoardColumnProps) {
+export function BoardColumn({ title, boardId, tasks, allLinks, filter, onEdit, onLinkTask }: BoardColumnProps) {
   const [showCompleted, setShowCompleted] = useState(false);
+
+  const linksByTaskId = useMemo(() => {
+    const map = new Map<string, TaskLink[]>();
+    for (const link of allLinks) {
+      const src = map.get(link.source_task_id);
+      if (src) src.push(link);
+      else map.set(link.source_task_id, [link]);
+      if (link.target_task_id !== link.source_task_id) {
+        const tgt = map.get(link.target_task_id);
+        if (tgt) tgt.push(link);
+        else map.set(link.target_task_id, [link]);
+      }
+    }
+    return map;
+  }, [allLinks]);
 
   const pendingTasks = tasks.filter((t) => !t.done);
   const completedTasks = tasks.filter((t) => t.done);
@@ -74,6 +90,7 @@ export function BoardColumn({ title, boardId, tasks, filter, onEdit, onLinkTask 
             <TaskCard
               key={task.id}
               task={task}
+              links={linksByTaskId.get(task.id) || []}
               onEdit={onEdit}
               onLinkTask={onLinkTask}
             />
@@ -108,6 +125,7 @@ export function BoardColumn({ title, boardId, tasks, filter, onEdit, onLinkTask 
                   <TaskCard
                     key={task.id}
                     task={task}
+                    links={linksByTaskId.get(task.id) || []}
                     onEdit={onEdit}
                     onLinkTask={onLinkTask}
                   />

@@ -166,6 +166,13 @@ export function useReorderTask() {
   });
 }
 
+export function useAllTaskLinks() {
+  return useQuery({
+    queryKey: ['taskLinks'],
+    queryFn: () => api.taskLinks.getAll(),
+  });
+}
+
 export function useTaskLinks(taskId: string) {
   return useQuery({
     queryKey: ['taskLinks', taskId],

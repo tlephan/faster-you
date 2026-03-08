@@ -151,6 +151,17 @@ export function deleteOlderThan(days: number): { deleted: number } {
 
 // ─── Task Links ──────────────────────────────────────────────
 
+export function getAllTaskLinks(): TaskLink[] {
+  return queryAll<TaskLink>(
+    `SELECT tl.*,
+            st.title as source_title,
+            tt.title as target_title
+     FROM task_links tl
+     JOIN tasks st ON st.id = tl.source_task_id
+     JOIN tasks tt ON tt.id = tl.target_task_id`
+  );
+}
+
 export function getTaskLinks(taskId: string): TaskLink[] {
   assertUuid(taskId, 'taskId');
   return queryAll<TaskLink>(

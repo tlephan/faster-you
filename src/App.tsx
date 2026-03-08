@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTasks, useSearchTasks, useReorderTask, useUpdateTask } from './hooks';
+import { useTasks, useSearchTasks, useReorderTask, useUpdateTask, useAllTaskLinks } from './hooks';
 import api from './api';
 import { BoardColumn } from './components/BoardColumn';
 import { TaskDialog } from './components/TaskDialog';
@@ -147,6 +147,8 @@ export default function App() {
 
   const { data: allTasks, isLoading } = useTasks();
   const { data: searchResults } = useSearchTasks(searchQuery);
+  const { data: allLinks } = useAllTaskLinks();
+  const taskLinks = allLinks || [];
 
   const tasks = searchQuery ? searchResults || [] : allTasks || [];
 
@@ -370,6 +372,7 @@ export default function App() {
                 title="Today"
                 boardId="today"
                 tasks={todayTasks}
+                allLinks={taskLinks}
                 filter={filter}
                 onEdit={handleEdit}
                 onLinkTask={handleLinkTask}
@@ -386,6 +389,7 @@ export default function App() {
                 title="Backlog"
                 boardId="backlog"
                 tasks={backlogTasks}
+                allLinks={taskLinks}
                 filter={filter}
                 onEdit={handleEdit}
                 onLinkTask={handleLinkTask}

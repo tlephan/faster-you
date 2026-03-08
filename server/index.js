@@ -223,6 +223,16 @@ const server = createServer(async (req, res) => {
     }
 
     // ── Task Links ─────────────────────────────────────────────
+    if (method === 'GET' && path === '/task-links') {
+      const links = db.prepare(`
+        SELECT tl.*, st.title AS source_title, tt.title AS target_title
+        FROM task_links tl
+        JOIN tasks st ON st.id = tl.source_task_id
+        JOIN tasks tt ON tt.id = tl.target_task_id
+      `).all();
+      return json(res, 200, { links });
+    }
+
     if (method === 'POST' && path === '/task-links') {
       const body = await readBody(req);
       const id = randomUUID();
