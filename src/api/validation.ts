@@ -35,3 +35,11 @@ export function assertText(value: unknown, name: string, maxLen: number): assert
     throw new Error(`${name} must be a non-empty string with at most ${maxLen} characters`);
   }
 }
+
+export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function assertDueDate(value: unknown): asserts value is string {
+  if (typeof value !== 'string' || !DATE_RE.test(value) || isNaN(Date.parse(value))) {
+    throw new Error('due_date must be a valid date in YYYY-MM-DD format');
+  }
+}

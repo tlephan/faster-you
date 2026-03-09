@@ -93,6 +93,13 @@ db.exec(`
   );
 `);
 
+// Migration: add due_date column
+try {
+  db.prepare('SELECT due_date FROM tasks LIMIT 1').get();
+} catch {
+  db.exec('ALTER TABLE tasks ADD COLUMN due_date TEXT DEFAULT NULL');
+}
+
 // ── Helpers ───────────────────────────────────────────────────
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -173,8 +180,8 @@ const server = createServer(async (req, res) => {
       const { m } = db.prepare('SELECT MAX(position) as m FROM tasks WHERE board = ?').get(body.board) ?? {};
       const position = (m ?? 0) + 1;
       db.prepare(
-        'INSERT INTO tasks (id, title, description, board, priority, position) VALUES (?, ?, ?, ?, ?, ?)'
-      ).run(id, body.title, body.description ?? null, body.board, body.priority ?? 'medium', position);
+        'INSERT INTO tasks (id, title, description, board, priority, position, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      ).run(id, body.title, body.description ?? null, body.board, body.priority ?? 'medium', position, body.due_date ?? null);
       return json(res, 201, db.prepare('SELECT * FROM tasks WHERE id = ?').get(id));
     }
 
@@ -189,7 +196,7 @@ const server = createServer(async (req, res) => {
 
       if (method === 'PATCH') {
         const body = await readBody(req);
-        const cols = ['title', 'description', 'priority', 'board', 'position'];
+        const cols = ['title', 'description', 'priority', 'board', 'position', 'due_date'];
         const fields = [], values = [];
         for (const k of cols) if (k in body) { fields.push(`${k} = ?`); values.push(body[k]); }
         if (!fields.length) return json(res, 400, { error: 'Nothing to update' });
@@ -277,9 +284,9 @@ const server = createServer(async (req, res) => {
         db.prepare('DELETE FROM tasks').run();
         for (const t of data.tasks) {
           db.prepare(
-            `INSERT INTO tasks (id, title, description, done, board, priority, position, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-          ).run(t.id, t.title, t.description ?? null, t.done ?? 0, t.board, t.priority, t.position ?? 0, t.created_at, t.updated_at);
+            `INSERT INTO tasks (id, title, description, done, board, priority, position, due_date, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).run(t.id, t.title, t.description ?? null, t.done ?? 0, t.board, t.priority, t.position ?? 0, t.due_date ?? null, t.created_at, t.updated_at);
         }
         for (const l of data.taskLinks) {
           db.prepare(

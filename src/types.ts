@@ -6,6 +6,7 @@ export interface Task {
   board: 'today' | 'backlog';
   priority: 'high' | 'medium' | 'low';
   position: number;
+  due_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -25,6 +26,7 @@ export interface CreateTaskInput {
   description?: string;
   board: 'today' | 'backlog';
   priority: 'high' | 'medium' | 'low';
+  due_date?: string | null;
 }
 
 export interface UpdateTaskInput {
@@ -33,6 +35,7 @@ export interface UpdateTaskInput {
   priority?: 'high' | 'medium' | 'low';
   board?: 'today' | 'backlog';
   position?: number;
+  due_date?: string | null;
 }
 
 export interface CreateTaskLinkInput {

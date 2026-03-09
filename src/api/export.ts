@@ -138,8 +138,8 @@ async function importDataLocal(): Promise<{ success: boolean; taskCount?: number
         throw new Error('Invalid task data in backup');
       }
       execute(
-        `INSERT INTO tasks (id, title, description, done, board, priority, position, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO tasks (id, title, description, done, board, priority, position, due_date, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           t.id,
           t.title,
@@ -148,6 +148,7 @@ async function importDataLocal(): Promise<{ success: boolean; taskCount?: number
           t.board,
           t.priority,
           t.position ?? 0,
+          t.due_date ?? null,
           t.created_at ?? new Date().toISOString(),
           t.updated_at ?? new Date().toISOString(),
         ]

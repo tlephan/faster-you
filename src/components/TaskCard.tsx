@@ -8,7 +8,7 @@ import { toast } from './Toast';
 import { cn } from '../lib/utils';
 import {
   GripVertical,
-
+  Calendar,
   Pencil,
   ArrowRightLeft,
   Link,
@@ -22,6 +22,25 @@ const priorityBorder = {
   medium: 'border-l-yellow-400',
   low: 'border-l-green-500',
 };
+
+function getDueDateStatus(dueDate: string): { label: string; className: string } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate + 'T00:00:00');
+  const diffMs = due.getTime() - today.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return { label: `${Math.abs(diffDays)}d overdue`, className: 'text-red-500' };
+  }
+  if (diffDays === 0) {
+    return { label: 'Due today', className: 'text-orange-500' };
+  }
+  if (diffDays <= 3) {
+    return { label: `Due in ${diffDays}d`, className: 'text-yellow-500' };
+  }
+  return { label: due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), className: 'text-muted-foreground' };
+}
 
 interface TaskCardProps {
   task: Task;
@@ -118,6 +137,17 @@ export const TaskCard = memo(function TaskCard({ task, links, onEdit, onLinkTask
             {task.description}
           </p>
         )}
+
+        {/* Due Date */}
+        {task.due_date && !task.done && (() => {
+          const status = getDueDateStatus(task.due_date);
+          return (
+            <div className={cn('mt-1 flex items-center gap-1 text-xs', status.className)}>
+              <Calendar className="h-3 w-3" />
+              {status.label}
+            </div>
+          );
+        })()}
 
         {/* Task Links */}
         {taskLinks.length > 0 && (

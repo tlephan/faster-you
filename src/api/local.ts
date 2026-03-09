@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { queryAll, queryOne, execute, getChanges } from '../db';
 import type { Task, TaskLink, CreateTaskInput, UpdateTaskInput, CreateTaskLinkInput } from '../types';
 import {
-  assertUuid, assertBoard, assertPriority, assertLinkType, assertText,
+  assertUuid, assertBoard, assertPriority, assertLinkType, assertText, assertDueDate,
   MAX_TITLE_LENGTH, MAX_DESCRIPTION_LENGTH, MAX_SEARCH_LENGTH,
 } from './validation';
 
@@ -30,6 +30,9 @@ export function createTask(task: CreateTaskInput): Task {
       throw new Error(`description must be at most ${MAX_DESCRIPTION_LENGTH} characters`);
     }
   }
+  if (task.due_date !== undefined && task.due_date !== null) {
+    assertDueDate(task.due_date);
+  }
 
   const id = uuidv4();
   const maxPos = queryOne<{ 'MAX(position)': number | null }>(
@@ -39,9 +42,9 @@ export function createTask(task: CreateTaskInput): Task {
   const position = ((maxPos?.['MAX(position)']) ?? 0) + 1;
 
   execute(
-    `INSERT INTO tasks (id, title, description, board, priority, position)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, task.title, task.description || null, task.board, task.priority, position]
+    `INSERT INTO tasks (id, title, description, board, priority, position, due_date)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [id, task.title, task.description || null, task.board, task.priority, position, task.due_date ?? null]
   );
 
   return queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id])!;
@@ -49,7 +52,7 @@ export function createTask(task: CreateTaskInput): Task {
 
 export function updateTask(id: string, updates: UpdateTaskInput): Task | null {
   assertUuid(id);
-  const allowed = ['title', 'description', 'priority', 'board', 'position'] as const;
+  const allowed = ['title', 'description', 'priority', 'board', 'position', 'due_date'] as const;
   const fields: string[] = [];
   const values: unknown[] = [];
 
@@ -72,6 +75,7 @@ export function updateTask(id: string, updates: UpdateTaskInput): Task | null {
         throw new Error('position must be a non-negative number');
       }
     }
+    if (key === 'due_date' && val !== null) assertDueDate(val);
 
     fields.push(`${key} = ?`);
     values.push(val);

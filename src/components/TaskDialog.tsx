@@ -16,6 +16,7 @@ export function TaskDialog({ open, onClose, task, defaultBoard = 'today' }: Task
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
   const [board, setBoard] = useState<'today' | 'backlog'>(defaultBoard);
+  const [dueDate, setDueDate] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
@@ -32,11 +33,13 @@ export function TaskDialog({ open, onClose, task, defaultBoard = 'today' }: Task
       setDescription(task.description || '');
       setPriority(task.priority);
       setBoard(task.board);
+      setDueDate(task.due_date || '');
     } else {
       setTitle('');
       setDescription('');
       setPriority('medium');
       setBoard(defaultBoard);
+      setDueDate('');
     }
     setConfirmDelete(false);
   }, [task, open, defaultBoard]);
@@ -50,12 +53,12 @@ export function TaskDialog({ open, onClose, task, defaultBoard = 'today' }: Task
 
     if (isEditing) {
       updateTask.mutate(
-        { id: task.id, updates: { title: title.trim(), description: description.trim() || undefined, priority, board } },
+        { id: task.id, updates: { title: title.trim(), description: description.trim() || undefined, priority, board, due_date: dueDate || null } },
         { onSuccess: onClose, onError }
       );
     } else {
       createTask.mutate(
-        { title: title.trim(), description: description.trim() || undefined, priority, board },
+        { title: title.trim(), description: description.trim() || undefined, priority, board, due_date: dueDate || null },
         { onSuccess: onClose, onError }
       );
     }
@@ -148,6 +151,29 @@ export function TaskDialog({ open, onClose, task, defaultBoard = 'today' }: Task
                   {b.charAt(0).toUpperCase() + b.slice(1)}
                 </label>
               ))}
+            </div>
+          </div>
+
+          {/* Due Date */}
+          <div>
+            <label className="text-sm font-medium">Due Date</label>
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              />
+              {dueDate && (
+                <button
+                  type="button"
+                  onClick={() => setDueDate('')}
+                  className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  title="Clear due date"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 

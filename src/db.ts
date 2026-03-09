@@ -113,6 +113,13 @@ const MIGRATIONS = [
       `INSERT INTO schema_version (version) VALUES (1)`,
     ],
   },
+  {
+    version: 2,
+    up: [
+      `ALTER TABLE tasks ADD COLUMN due_date TEXT DEFAULT NULL`,
+      `INSERT INTO schema_version (version) VALUES (2)`,
+    ],
+  },
 ];
 
 const IDB_DB_NAME = 'fasteryou';
